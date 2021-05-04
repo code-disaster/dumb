@@ -151,7 +151,7 @@ static int it_s3m_read_sample_data(IT_SAMPLE *sample, int ffi,
     if (sample->flags & IT_SAMPLE_STEREO)
         datasize <<= 1;
 
-    sample->data = malloc(datasize * (sample->flags & IT_SAMPLE_16BIT ? 2 : 1));
+    sample->data = dumb_malloc(datasize * (sample->flags & IT_SAMPLE_16BIT ? 2 : 1));
     if (!sample->data)
         return -1;
 
@@ -310,7 +310,7 @@ static int it_s3m_read_pattern(IT_PATTERN *pattern, DUMBFILE *f,
         }
     }
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
 
     if (!pattern->entry)
         return -1;
@@ -445,7 +445,7 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
 
     unsigned char *buffer;
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         return NULL;
 
@@ -455,12 +455,12 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
     n = dumbfile_getc(f);
 
     if (n != 0x1A && n != 0) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
     if (dumbfile_getc(f) != 16) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -486,14 +486,14 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
         return NULL;
     }
 
-    sigdata->order = malloc(sigdata->n_orders);
+    sigdata->order = dumb_malloc(sigdata->n_orders);
     if (!sigdata->order) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
 
     if (sigdata->n_samples) {
-        sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+        sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
         if (!sigdata->sample) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -504,7 +504,7 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
 
     if (sigdata->n_patterns) {
         sigdata->pattern =
-            malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+            dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
         if (!sigdata->pattern) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -581,7 +581,7 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
     dumbfile_getnc((char *)sigdata->order, sigdata->n_orders, f);
     sigdata->restart_position = 0;
 
-    component = malloc(768 * sizeof(*component));
+    component = dumb_malloc(768 * sizeof(*component));
     if (!component) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -642,14 +642,14 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
     sigdata->pan_separation = 128;
 
     if (dumbfile_error(f)) {
-        free(component);
+        dumb_free(component);
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
 
-    buffer = malloc(65536);
+    buffer = dumb_malloc(65536);
     if (!buffer) {
-        free(component);
+        dumb_free(component);
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
@@ -660,8 +660,8 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
 
         offset = 0;
         if (dumbfile_seek(f, component[n].offset, DFS_SEEK_SET)) {
-            free(buffer);
-            free(component);
+            dumb_free(buffer);
+            dumb_free(component);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
@@ -671,8 +671,8 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
         case S3M_COMPONENT_PATTERN:
             if (it_s3m_read_pattern(&sigdata->pattern[component[n].n], f,
                                     buffer)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -682,8 +682,8 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
             if (it_s3m_read_sample_header(&sigdata->sample[component[n].n],
                                           &offset, &sample_pack[component[n].n],
                                           *cwtv, f)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -713,16 +713,16 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
         while (m >= 0) {
             // XXX
             if (dumbfile_seek(f, component[m].offset, DFS_SEEK_SET)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
 
             if (it_s3m_read_sample_data(&sigdata->sample[component[m].n], ffi,
                                         sample_pack[component[m].n], f)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -731,8 +731,8 @@ static DUMB_IT_SIGDATA *it_s3m_load_sigdata(DUMBFILE *f, int *cwtv) {
         }
     }
 
-    free(buffer);
-    free(component);
+    dumb_free(buffer);
+    dumb_free(component);
 
     if (_dumb_it_fix_invalid_orders(sigdata) < 0) {
         _dumb_it_unload_sigdata(sigdata);

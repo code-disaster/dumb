@@ -39,7 +39,7 @@ static int it_old_psm_read_samples(IT_SAMPLE **sample, DUMBFILE *f, int *num) {
     const unsigned char *sdata;
     long sample_bytes;
 
-    buffer = malloc(count * 64);
+    buffer = dumb_malloc(count * 64);
     if (!buffer)
         goto error;
 
@@ -57,7 +57,7 @@ static int it_old_psm_read_samples(IT_SAMPLE **sample, DUMBFILE *f, int *num) {
     }
 
     if (true_num > count) {
-        IT_SAMPLE *meh = realloc(*sample, true_num * sizeof(*meh));
+        IT_SAMPLE *meh = dumb_realloc(*sample, true_num * sizeof(*meh));
         if (!meh)
             goto error_fb;
         for (n = count; n < true_num; n++) {
@@ -138,7 +138,7 @@ static int it_old_psm_read_samples(IT_SAMPLE **sample, DUMBFILE *f, int *num) {
         smp.max_resampling_quality = -1;
 
         sample_bytes = smp.length * ((flags & 4) ? 2 : 1);
-        smp.data = malloc(sample_bytes);
+        smp.data = dumb_malloc(sample_bytes);
         if (!smp.data)
             goto error_fb;
         sdata = (const unsigned char *)smp.data;
@@ -199,18 +199,18 @@ static int it_old_psm_read_samples(IT_SAMPLE **sample, DUMBFILE *f, int *num) {
         }
 
         if (s->data)
-            free(s->data);
+            dumb_free(s->data);
         *s = smp;
     }
 
-    free(buffer);
+    dumb_free(buffer);
 
     return 0;
 
 error_fd:
-    free((void *)sdata);
+    dumb_free((void *)sdata);
 error_fb:
-    free(buffer);
+    dumb_free(buffer);
 error:
     return -1;
 }
@@ -223,7 +223,7 @@ static int it_old_psm_read_patterns(IT_PATTERN *pattern, DUMBFILE *f, int num,
 
     IT_ENTRY *entry;
 
-    buffer = malloc(size);
+    buffer = dumb_malloc(size);
     if (!buffer)
         goto error;
 
@@ -282,7 +282,7 @@ static int it_old_psm_read_patterns(IT_PATTERN *pattern, DUMBFILE *f, int num,
             }
         }
 
-        entry = malloc(p->n_entries * sizeof(*p->entry));
+        entry = dumb_malloc(p->n_entries * sizeof(*p->entry));
         if (!entry)
             goto error_fb;
 
@@ -510,12 +510,12 @@ static int it_old_psm_read_patterns(IT_PATTERN *pattern, DUMBFILE *f, int num,
         offset += psize;
     }
 
-    free(buffer);
+    dumb_free(buffer);
 
     return 0;
 
 error_fb:
-    free(buffer);
+    dumb_free(buffer);
 error:
     return -1;
 }
@@ -547,7 +547,7 @@ static DUMB_IT_SIGDATA *it_old_psm_load_sigdata(DUMBFILE *f) {
     if (dumbfile_mgetl(f) != DUMB_ID('P', 'S', 'M', 254))
         goto error;
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         goto error;
 
@@ -595,12 +595,12 @@ static DUMB_IT_SIGDATA *it_old_psm_load_sigdata(DUMBFILE *f) {
 
     sigdata->restart_position = 0;
 
-    sigdata->order = malloc(sigdata->n_orders);
+    sigdata->order = dumb_malloc(sigdata->n_orders);
     if (!sigdata->order)
         goto error_usd;
 
     if (sigdata->n_samples) {
-        sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+        sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
         if (!sigdata->sample)
             goto error_usd;
         for (n = 0; n < sigdata->n_samples; n++)
@@ -609,14 +609,14 @@ static DUMB_IT_SIGDATA *it_old_psm_load_sigdata(DUMBFILE *f) {
 
     if (sigdata->n_patterns) {
         sigdata->pattern =
-            malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+            dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
         if (!sigdata->pattern)
             goto error_usd;
         for (n = 0; n < sigdata->n_patterns; n++)
             sigdata->pattern[n].entry = NULL;
     }
 
-    component = malloc(5 * sizeof(*component));
+    component = dumb_malloc(5 * sizeof(*component));
     if (!component)
         goto error_usd;
 
@@ -695,7 +695,7 @@ static DUMB_IT_SIGDATA *it_old_psm_load_sigdata(DUMBFILE *f) {
             if (dumbfile_mgetl(f) == DUMB_ID('T', 'E', 'X', 'T')) {
                 o = dumbfile_igetw(f);
                 if (o > 0) {
-                    sigdata->song_message = malloc(o + 1);
+                    sigdata->song_message = dumb_malloc(o + 1);
                     if (dumbfile_getnc((char *)sigdata->song_message, o, f) < o)
                         goto error_fc;
                     sigdata->song_message[o] = 0;
@@ -708,17 +708,17 @@ static DUMB_IT_SIGDATA *it_old_psm_load_sigdata(DUMBFILE *f) {
     if (_dumb_it_fix_invalid_orders(sigdata) < 0)
         goto error_fc;
 
-    free(component);
+    dumb_free(component);
 
     return sigdata;
 
 error_fc:
-    free(component);
+    dumb_free(component);
 error_usd:
     _dumb_it_unload_sigdata(sigdata);
     return NULL;
 error_sd:
-    free(sigdata);
+    dumb_free(sigdata);
 error:
     return NULL;
 }

@@ -35,7 +35,7 @@ typedef struct DUMB_IT_ROW_TIME {
 
 void *timekeeping_array_create(size_t size) {
     size_t *_size =
-        (size_t *)calloc(1, sizeof(size_t) + sizeof(DUMB_IT_ROW_TIME) * size);
+        (size_t *)dumb_calloc(1, sizeof(size_t) + sizeof(DUMB_IT_ROW_TIME) * size);
     if (_size) {
         *_size = size;
     }
@@ -50,11 +50,11 @@ void timekeeping_array_destroy(void *array) {
 
     for (i = 0; i < *size; i++) {
         if (s[i].times)
-            free(s[i].times);
+            dumb_free(s[i].times);
     }
 #endif
 
-    free(array);
+    dumb_free(array);
 }
 
 void *timekeeping_array_dup(void *array) {
@@ -62,7 +62,7 @@ void *timekeeping_array_dup(void *array) {
     size_t *size = (size_t *)array;
     DUMB_IT_ROW_TIME *s = (DUMB_IT_ROW_TIME *)(size + 1);
     size_t *new_size =
-        (size_t *)calloc(1, sizeof(size_t) + sizeof(DUMB_IT_ROW_TIME) * *size);
+        (size_t *)dumb_calloc(1, sizeof(size_t) + sizeof(DUMB_IT_ROW_TIME) * *size);
     if (new_size) {
         DUMB_IT_ROW_TIME *new_s = (DUMB_IT_ROW_TIME *)(new_size + 1);
 
@@ -78,7 +78,7 @@ void *timekeeping_array_dup(void *array) {
             if (s[i].times) {
                 size_t time_count = (s[i].count + 15) & ~15;
                 new_s[i].times =
-                    (LONG_LONG *)malloc(sizeof(LONG_LONG) * time_count);
+                    (LONG_LONG *)dumb_malloc(sizeof(LONG_LONG) * time_count);
                 if (new_s[i].times == (void *)0) {
                     timekeeping_array_destroy(new_size);
                     return (void *)0;
@@ -139,7 +139,7 @@ void timekeeping_array_push(void *array, size_t index, LONG_LONG time) {
     time_count = (s[index].count + 16) & ~15;
 
     s[index].times =
-        (LONG_LONG *)realloc(s[index].times, sizeof(LONG_LONG) * time_count);
+        (LONG_LONG *)dumb_realloc(s[index].times, sizeof(LONG_LONG) * time_count);
 
     s[index].times[s[index].count++] = time;
 #endif

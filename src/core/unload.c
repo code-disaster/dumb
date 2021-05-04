@@ -29,7 +29,7 @@ static void destroy_signal(DUH_SIGNAL *signal) {
                 if (signal->sigdata)
                     (*signal->desc->unload_sigdata)(signal->sigdata);
 
-        free(signal);
+        dumb_free(signal);
     }
 }
 
@@ -44,15 +44,15 @@ void unload_duh(DUH *duh) {
             for (i = 0; i < duh->n_signals; i++)
                 destroy_signal(duh->signal[i]);
 
-            free(duh->signal);
+            dumb_free(duh->signal);
         }
 
         if (duh->tag) {
             if (duh->tag[0][0])
-                free(duh->tag[0][0]);
-            free(duh->tag);
+                dumb_free(duh->tag[0][0]);
+            dumb_free(duh->tag);
         }
 
-        free(duh);
+        dumb_free(duh);
     }
 }

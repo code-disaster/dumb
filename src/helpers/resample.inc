@@ -73,7 +73,7 @@ void dumb_reset_resampler(DUMB_RESAMPLER *resampler, SRCTYPE *src,
 
 DUMB_RESAMPLER *dumb_start_resampler(SRCTYPE *src, int src_channels, long pos,
                                      long start, long end, int quality) {
-    DUMB_RESAMPLER *resampler = malloc(sizeof(*resampler));
+    DUMB_RESAMPLER *resampler = dumb_malloc(sizeof(*resampler));
     if (!resampler)
         return NULL;
     dumb_reset_resampler(resampler, src, src_channels, pos, start, end,
@@ -279,7 +279,7 @@ DUMB_RESAMPLER *dumb_start_resampler(SRCTYPE *src, int src_channels, long pos,
 
 void dumb_end_resampler(DUMB_RESAMPLER *resampler) {
     if (resampler)
-        free(resampler);
+        dumb_free(resampler);
 }
 
 #undef FIR

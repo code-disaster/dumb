@@ -53,7 +53,7 @@ DUH_SIGRENDERER *duh_start_sigrenderer(DUH *duh, int sig, int n_channels,
     if (!signal)
         return NULL;
 
-    sigrenderer = malloc(sizeof(*sigrenderer));
+    sigrenderer = dumb_malloc(sizeof(*sigrenderer));
     if (!sigrenderer)
         return NULL;
 
@@ -68,7 +68,7 @@ DUH_SIGRENDERER *duh_start_sigrenderer(DUH *duh, int sig, int n_channels,
         duh->signal[sig] = signal;
 
         if (!sigrenderer->sigrenderer) {
-            free(sigrenderer);
+            dumb_free(sigrenderer);
             return NULL;
         }
     } else
@@ -169,7 +169,7 @@ void duh_end_sigrenderer(DUH_SIGRENDERER *sigrenderer) {
             if (sigrenderer->sigrenderer)
                 (*sigrenderer->desc->end_sigrenderer)(sigrenderer->sigrenderer);
 
-        free(sigrenderer);
+        dumb_free(sigrenderer);
     }
 }
 
@@ -181,7 +181,7 @@ DUH_SIGRENDERER *duh_encapsulate_raw_sigrenderer(sigrenderer_t *vsigrenderer,
     if (desc->start_sigrenderer && !vsigrenderer)
         return NULL;
 
-    sigrenderer = malloc(sizeof(*sigrenderer));
+    sigrenderer = dumb_malloc(sizeof(*sigrenderer));
     if (!sigrenderer) {
         if (desc->end_sigrenderer)
             if (vsigrenderer)
@@ -226,7 +226,7 @@ sigrenderer_t *duh_decompose_to_raw_sigrenderer(DUH_SIGRENDERER *sigrenderer, lo
 			if (sigrenderer->sigrenderer)
 				(*sigrenderer->desc->end_sigrenderer)(sigrenderer->sigrenderer);
 
-		free(sigrenderer);
+		dumb_free(sigrenderer);
 	}
 
 

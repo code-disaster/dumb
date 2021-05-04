@@ -38,7 +38,7 @@ struct DUMB_CLICK {
 };
 
 DUMB_CLICK_REMOVER *dumb_create_click_remover(void) {
-    DUMB_CLICK_REMOVER *cr = malloc(sizeof(*cr));
+    DUMB_CLICK_REMOVER *cr = dumb_malloc(sizeof(*cr));
     if (!cr)
         return NULL;
 
@@ -63,7 +63,7 @@ void dumb_record_click(DUMB_CLICK_REMOVER *cr, long pos, sample_t step) {
         return;
     }
 
-    click = malloc(sizeof(*click));
+    click = dumb_malloc(sizeof(*click));
     if (!click)
         return;
 
@@ -153,7 +153,7 @@ void dumb_remove_clicks(DUMB_CLICK_REMOVER *cr, sample_t *samples, long length,
             }
         }
         cr->offset = offset - click->step;
-        free(click);
+        dumb_free(click);
         click = next;
     }
 
@@ -185,10 +185,10 @@ void dumb_destroy_click_remover(DUMB_CLICK_REMOVER *cr) {
         DUMB_CLICK *click = cr->click;
         while (click) {
             DUMB_CLICK *next = click->next;
-            free(click);
+            dumb_free(click);
             click = next;
         }
-        free(cr);
+        dumb_free(cr);
     }
 }
 
@@ -197,7 +197,7 @@ DUMB_CLICK_REMOVER **dumb_create_click_remover_array(int n) {
     DUMB_CLICK_REMOVER **cr;
     if (n <= 0)
         return NULL;
-    cr = malloc(n * sizeof(*cr));
+    cr = dumb_malloc(n * sizeof(*cr));
     if (!cr)
         return NULL;
     for (i = 0; i < n; i++)
@@ -252,6 +252,6 @@ void dumb_destroy_click_remover_array(int n, DUMB_CLICK_REMOVER **cr) {
         int i;
         for (i = 0; i < n; i++)
             dumb_destroy_click_remover(cr[i]);
-        free(cr);
+        dumb_free(cr);
     }
 }

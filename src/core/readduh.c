@@ -26,27 +26,27 @@ static DUH_SIGNAL *read_signal(DUH *duh, DUMBFILE *f) {
     DUH_SIGNAL *signal;
     long type;
 
-    signal = malloc(sizeof(*signal));
+    signal = dumb_malloc(sizeof(*signal));
 
     if (!signal)
         return NULL;
 
     type = dumbfile_mgetl(f);
     if (dumbfile_error(f)) {
-        free(signal);
+        dumb_free(signal);
         return NULL;
     }
 
     signal->desc = _dumb_get_sigtype_desc(type);
     if (!signal->desc) {
-        free(signal);
+        dumb_free(signal);
         return NULL;
     }
 
     if (signal->desc->load_sigdata) {
         signal->sigdata = (*signal->desc->load_sigdata)(duh, f);
         if (!signal->sigdata) {
-            free(signal);
+            dumb_free(signal);
             return NULL;
         }
     } else
@@ -65,25 +65,25 @@ DUH *read_duh(DUMBFILE *f) {
     if (dumbfile_mgetl(f) != DUH_SIGNATURE)
         return NULL;
 
-    duh = malloc(sizeof(*duh));
+    duh = dumb_malloc(sizeof(*duh));
     if (!duh)
         return NULL;
 
     duh->length = dumbfile_igetl(f);
     if (dumbfile_error(f) || duh->length <= 0) {
-        free(duh);
+        dumb_free(duh);
         return NULL;
     }
 
     duh->n_signals = (int)dumbfile_igetl(f);
     if (dumbfile_error(f) || duh->n_signals <= 0) {
-        free(duh);
+        dumb_free(duh);
         return NULL;
     }
 
-    duh->signal = malloc(sizeof(*duh->signal) * duh->n_signals);
+    duh->signal = dumb_malloc(sizeof(*duh->signal) * duh->n_signals);
     if (!duh->signal) {
-        free(duh);
+        dumb_free(duh);
         return NULL;
     }
 

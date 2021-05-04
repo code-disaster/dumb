@@ -38,7 +38,7 @@ int dumb_atexit(void (*proc)(void)) {
         dap = dap->next;
     }
 
-    dap = malloc(sizeof(*dap));
+    dap = dumb_malloc(sizeof(*dap));
 
     if (!dap)
         return -1;
@@ -54,7 +54,7 @@ void dumb_exit(void) {
     while (dumb_atexit_proc) {
         DUMB_ATEXIT_PROC *next = dumb_atexit_proc->next;
         (*dumb_atexit_proc->proc)();
-        free(dumb_atexit_proc);
+        dumb_free(dumb_atexit_proc);
         dumb_atexit_proc = next;
     }
 }

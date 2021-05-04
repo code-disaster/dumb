@@ -56,7 +56,7 @@ static dumb_ssize_t dumb_memfile_getnc(char *ptr, size_t n, void *f) {
     return n;
 }
 
-static void dumb_memfile_close(void *f) { free(f); }
+static void dumb_memfile_close(void *f) { dumb_free(f); }
 
 static int dumb_memfile_seek(void *f, dumb_off_t n) {
     MEMFILE *m = f;
@@ -81,7 +81,7 @@ static const DUMBFILE_SYSTEM memfile_dfs = {NULL,
                                             &dumb_memfile_get_size};
 
 DUMBFILE *dumbfile_open_memory(const char *data, size_t size) {
-    MEMFILE *m = malloc(sizeof(*m));
+    MEMFILE *m = dumb_malloc(sizeof(*m));
     if (!m)
         return NULL;
 

@@ -46,7 +46,7 @@ AL_DUH_PLAYER *al_start_duh(DUH *duh, int n_channels, long pos, float volume,
     if (!duh)
         return NULL;
 
-    dp = malloc(sizeof(*dp));
+    dp = dumb_malloc(sizeof(*dp));
     if (!dp)
         return NULL;
 
@@ -57,7 +57,7 @@ AL_DUH_PLAYER *al_start_duh(DUH *duh, int n_channels, long pos, float volume,
     dp->stream = play_audio_stream(bufsize, 16, n_channels - 1, freq, 255, 128);
 
     if (!dp->stream) {
-        free(dp);
+        dumb_free(dp);
         return NULL;
     }
 
@@ -67,7 +67,7 @@ AL_DUH_PLAYER *al_start_duh(DUH *duh, int n_channels, long pos, float volume,
 
     if (!dp->sigrenderer) {
         stop_audio_stream(dp->stream);
-        free(dp);
+        dumb_free(dp);
         return NULL;
     }
 
@@ -83,7 +83,7 @@ void al_stop_duh(AL_DUH_PLAYER *dp) {
             duh_end_sigrenderer(dp->sigrenderer);
             stop_audio_stream(dp->stream);
         }
-        free(dp);
+        dumb_free(dp);
     }
 }
 
@@ -167,7 +167,7 @@ AL_DUH_PLAYER *al_duh_encapsulate_sigrenderer(DUH_SIGRENDERER *sigrenderer,
     if (!sigrenderer)
         return NULL;
 
-    dp = malloc(sizeof(*dp));
+    dp = dumb_malloc(sizeof(*dp));
     if (!dp)
         return NULL;
 
@@ -184,7 +184,7 @@ AL_DUH_PLAYER *al_duh_encapsulate_sigrenderer(DUH_SIGRENDERER *sigrenderer,
     dp->stream = play_audio_stream(bufsize, 16, n_channels - 1, freq, 255, 128);
 
     if (!dp->stream) {
-        free(dp);
+        dumb_free(dp);
         return NULL;
     }
 
@@ -210,7 +210,7 @@ DUH_SIGRENDERER *al_duh_decompose_to_sigrenderer(AL_DUH_PLAYER *dp) {
         DUH_SIGRENDERER *sigrenderer = dp->sigrenderer;
         if (sigrenderer)
             stop_audio_stream(dp->stream);
-        free(dp);
+        dumb_free(dp);
         return sigrenderer;
     }
     return NULL;

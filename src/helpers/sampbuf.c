@@ -22,12 +22,12 @@
 
 sample_t **allocate_sample_buffer(int n_channels, long length) {
     int i;
-    sample_t **samples = malloc(((n_channels + 1) >> 1) * sizeof(*samples));
+    sample_t **samples = dumb_malloc(((n_channels + 1) >> 1) * sizeof(*samples));
     if (!samples)
         return NULL;
-    samples[0] = malloc(n_channels * length * sizeof(*samples[0]));
+    samples[0] = dumb_malloc(n_channels * length * sizeof(*samples[0]));
     if (!samples[0]) {
-        free(samples);
+        dumb_free(samples);
         return NULL;
     }
     for (i = 1; i<(n_channels + 1)>> 1; i++)
@@ -37,7 +37,7 @@ sample_t **allocate_sample_buffer(int n_channels, long length) {
 
 void destroy_sample_buffer(sample_t **samples) {
     if (samples) {
-        free(samples[0]);
-        free(samples);
+        dumb_free(samples[0]);
+        dumb_free(samples);
     }
 }

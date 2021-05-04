@@ -56,7 +56,7 @@ static int it_okt_read_pattern(IT_PATTERN *pattern, const unsigned char *data,
     }
 
     pattern->entry =
-        (IT_ENTRY *)malloc(pattern->n_entries * sizeof(*pattern->entry));
+        (IT_ENTRY *)dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
     if (!pattern->entry)
         return -1;
 
@@ -224,7 +224,7 @@ static int it_okt_read_sample_data(IT_SAMPLE *sample, const char *data,
                 sample->sus_loop_end = length;
         }
 
-        sample->data = malloc(length);
+        sample->data = dumb_malloc(length);
 
         if (!sample->data)
             return -1;
@@ -250,7 +250,7 @@ struct IFF_CHUNKED {
 };
 
 static IFF_CHUNKED *dumbfile_read_okt(DUMBFILE *f) {
-    IFF_CHUNKED *mod = (IFF_CHUNKED *)malloc(sizeof(*mod));
+    IFF_CHUNKED *mod = (IFF_CHUNKED *)dumb_malloc(sizeof(*mod));
     if (!mod)
         return NULL;
 
@@ -259,12 +259,12 @@ static IFF_CHUNKED *dumbfile_read_okt(DUMBFILE *f) {
 
     for (;;) {
         long bytes_read;
-        IFF_CHUNK *chunk = (IFF_CHUNK *)realloc(
+        IFF_CHUNK *chunk = (IFF_CHUNK *)dumb_realloc(
             mod->chunks, (mod->chunk_count + 1) * sizeof(IFF_CHUNK));
         if (!chunk) {
             if (mod->chunks)
-                free(mod->chunks);
-            free(mod);
+                dumb_free(mod->chunks);
+            dumb_free(mod);
             return NULL;
         }
         mod->chunks = chunk;
@@ -280,17 +280,17 @@ static IFF_CHUNKED *dumbfile_read_okt(DUMBFILE *f) {
         if (dumbfile_error(f))
             break;
 
-        chunk->data = (unsigned char *)malloc(chunk->size);
+        chunk->data = (unsigned char *)dumb_malloc(chunk->size);
         if (!chunk->data) {
-            free(mod->chunks);
-            free(mod);
+            dumb_free(mod->chunks);
+            dumb_free(mod);
             return NULL;
         }
 
         bytes_read = dumbfile_getnc((char *)chunk->data, chunk->size, f);
         if (bytes_read < chunk->size) {
             if (bytes_read <= 0) {
-                free(chunk->data);
+                dumb_free(chunk->data);
                 break;
             } else {
                 chunk->size = (unsigned int)bytes_read;
@@ -304,8 +304,8 @@ static IFF_CHUNKED *dumbfile_read_okt(DUMBFILE *f) {
 
     if (!mod->chunk_count) {
         if (mod->chunks)
-            free(mod->chunks);
-        free(mod);
+            dumb_free(mod->chunks);
+        dumb_free(mod);
         mod = NULL;
     }
 
@@ -318,11 +318,11 @@ void free_okt(IFF_CHUNKED *mod) {
         if (mod->chunks) {
             for (i = 0; i < mod->chunk_count; i++) {
                 if (mod->chunks[i].data)
-                    free(mod->chunks[i].data);
+                    dumb_free(mod->chunks[i].data);
             }
-            free(mod->chunks);
+            dumb_free(mod->chunks);
         }
-        free(mod);
+        dumb_free(mod);
     }
 }
 
@@ -375,7 +375,7 @@ static DUMB_IT_SIGDATA *it_okt_load_sigdata(DUMBFILE *f) {
     if (!mod)
         return NULL;
 
-    sigdata = (DUMB_IT_SIGDATA *)malloc(sizeof(*sigdata));
+    sigdata = (DUMB_IT_SIGDATA *)dumb_malloc(sizeof(*sigdata));
     if (!sigdata) {
         free_okt(mod);
         return NULL;
@@ -385,7 +385,7 @@ static DUMB_IT_SIGDATA *it_okt_load_sigdata(DUMBFILE *f) {
 
     chunk = get_chunk_by_type(mod, DUMB_ID('S', 'P', 'E', 'E'), 0);
     if (!chunk || chunk->size < 2) {
-        free(sigdata);
+        dumb_free(sigdata);
         free_okt(mod);
         return NULL;
     }
@@ -394,7 +394,7 @@ static DUMB_IT_SIGDATA *it_okt_load_sigdata(DUMBFILE *f) {
 
     chunk = get_chunk_by_type(mod, DUMB_ID('S', 'A', 'M', 'P'), 0);
     if (!chunk || chunk->size < 32) {
-        free(sigdata);
+        dumb_free(sigdata);
         free_okt(mod);
         return NULL;
     }
@@ -403,7 +403,7 @@ static DUMB_IT_SIGDATA *it_okt_load_sigdata(DUMBFILE *f) {
 
     chunk = get_chunk_by_type(mod, DUMB_ID('C', 'M', 'O', 'D'), 0);
     if (!chunk || chunk->size < 8) {
-        free(sigdata);
+        dumb_free(sigdata);
         free_okt(mod);
         return NULL;
     }
@@ -419,7 +419,7 @@ static DUMB_IT_SIGDATA *it_okt_load_sigdata(DUMBFILE *f) {
     }
 
     if (!n_channels) {
-        free(sigdata);
+        dumb_free(sigdata);
         free_okt(mod);
         return NULL;
     }
@@ -427,9 +427,9 @@ static DUMB_IT_SIGDATA *it_okt_load_sigdata(DUMBFILE *f) {
     sigdata->n_pchannels = n_channels;
 
     sigdata->sample =
-        (IT_SAMPLE *)malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+        (IT_SAMPLE *)dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample) {
-        free(sigdata);
+        dumb_free(sigdata);
         free_okt(mod);
         return NULL;
     }
@@ -477,7 +477,7 @@ static DUMB_IT_SIGDATA *it_okt_load_sigdata(DUMBFILE *f) {
         return NULL;
     }
 
-    sigdata->order = (unsigned char *)malloc(sigdata->n_orders);
+    sigdata->order = (unsigned char *)dumb_malloc(sigdata->n_orders);
     if (!sigdata->order) {
         _dumb_it_unload_sigdata(sigdata);
         free_okt(mod);
@@ -507,7 +507,7 @@ static DUMB_IT_SIGDATA *it_okt_load_sigdata(DUMBFILE *f) {
     }
 
     sigdata->pattern =
-        (IT_PATTERN *)malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+        (IT_PATTERN *)dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern) {
         _dumb_it_unload_sigdata(sigdata);
         free_okt(mod);

@@ -92,7 +92,7 @@ static int it_stm_read_sample_data(IT_SAMPLE *sample, DUMBFILE *f) {
     if (!sample->length)
         return 0;
 
-    sample->data = malloc(sample->length);
+    sample->data = dumb_malloc(sample->length);
     if (!sample->data)
         return -1;
 
@@ -124,7 +124,7 @@ static int it_stm_read_pattern(IT_PATTERN *pattern, DUMBFILE *f,
         }
     }
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
     if (!pattern->entry)
         return -1;
 
@@ -200,7 +200,7 @@ static DUMB_IT_SIGDATA *it_stm_load_sigdata(DUMBFILE *f, int *version) {
 
     int n;
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         return NULL;
 
@@ -211,18 +211,18 @@ static DUMB_IT_SIGDATA *it_stm_load_sigdata(DUMBFILE *f, int *version) {
     dumbfile_getnc(tracker_name, 8, f);
     n = dumbfile_getc(f);
     if (n != 0x02 && n != 0x1A && n != 0x1B) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
     if (dumbfile_getc(f) != 2) /* only support modules */
     {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
     if (strnicmp(tracker_name, "!Scream!", 8) &&
         strnicmp(tracker_name, "BMOD2STM", 8) &&
         strnicmp(tracker_name, "WUZAMOD!", 8)) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -265,7 +265,7 @@ static DUMB_IT_SIGDATA *it_stm_load_sigdata(DUMBFILE *f, int *version) {
         return NULL;
     }
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -275,7 +275,7 @@ static DUMB_IT_SIGDATA *it_stm_load_sigdata(DUMBFILE *f, int *version) {
 
     if (sigdata->n_patterns) {
         sigdata->pattern =
-            malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+            dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
         if (!sigdata->pattern) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -299,7 +299,7 @@ static DUMB_IT_SIGDATA *it_stm_load_sigdata(DUMBFILE *f, int *version) {
         }
     }
 
-    sigdata->order = malloc(128);
+    sigdata->order = dumb_malloc(128);
     if (!sigdata->order) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -327,19 +327,19 @@ static DUMB_IT_SIGDATA *it_stm_load_sigdata(DUMBFILE *f, int *version) {
     }
 
     if (sigdata->n_patterns) {
-        unsigned char *buffer = malloc(64 * 4 * 4);
+        unsigned char *buffer = dumb_malloc(64 * 4 * 4);
         if (!buffer) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
         for (n = 0; n < sigdata->n_patterns; ++n) {
             if (it_stm_read_pattern(&sigdata->pattern[n], f, buffer)) {
-                free(buffer);
+                dumb_free(buffer);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
         }
-        free(buffer);
+        dumb_free(buffer);
     }
 
     for (n = 0; n < sigdata->n_samples; ++n) {

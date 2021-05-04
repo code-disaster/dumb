@@ -41,7 +41,7 @@ DUMBFILE *dumbfile_open(const char *filename) {
 
     ASSERT(the_dfs);
 
-    f = (DUMBFILE *)malloc(sizeof(*f));
+    f = (DUMBFILE *)dumb_malloc(sizeof(*f));
 
     if (!f)
         return NULL;
@@ -51,7 +51,7 @@ DUMBFILE *dumbfile_open(const char *filename) {
     f->file = (*the_dfs->open)(filename);
 
     if (!f->file) {
-        free(f);
+        dumb_free(f);
         return NULL;
     }
 
@@ -67,7 +67,7 @@ DUMBFILE *dumbfile_open_ex(void *file, const DUMBFILE_SYSTEM *dfs) {
     ASSERT(dfs->getc);
     ASSERT(file);
 
-    f = (DUMBFILE *)malloc(sizeof(*f));
+    f = (DUMBFILE *)dumb_malloc(sizeof(*f));
 
     if (!f) {
         if (dfs->close)
@@ -367,7 +367,7 @@ int dumbfile_close(DUMBFILE *f) {
     if (f->dfs->close)
         (*f->dfs->close)(f->file);
 
-    free(f);
+    dumb_free(f);
 
     return rv;
 }

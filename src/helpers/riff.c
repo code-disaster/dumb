@@ -21,7 +21,7 @@ struct riff *riff_parse(DUMBFILE *f, long offset, long size, unsigned proper) {
     if (stream_size < 4)
         return 0;
 
-    stream = (struct riff *)malloc(sizeof(struct riff));
+    stream = (struct riff *)dumb_malloc(sizeof(struct riff));
     if (!stream)
         return 0;
 
@@ -35,7 +35,7 @@ struct riff *riff_parse(DUMBFILE *f, long offset, long size, unsigned proper) {
         struct riff_chunk *chunk;
         if (stream_size < 8)
             break;
-        stream->chunks = (struct riff_chunk *)realloc(
+        stream->chunks = (struct riff_chunk *)dumb_realloc(
             stream->chunks,
             (stream->chunk_count + 1) * sizeof(struct riff_chunk));
         if (!stream->chunks)
@@ -81,8 +81,8 @@ void riff_free(struct riff *stream) {
                 if (chunk->nested)
                     riff_free(chunk->nested);
             }
-            free(stream->chunks);
+            dumb_free(stream->chunks);
         }
-        free(stream);
+        dumb_free(stream);
     }
 }

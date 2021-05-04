@@ -133,7 +133,7 @@ static int it_riff_am_process_sample(IT_SAMPLE *sample, DUMBFILE *f, size_t len,
 
     length_bytes = sample->length << ((flags & 0x04) >> 2);
 
-    sample->data = malloc(length_bytes);
+    sample->data = dumb_malloc(length_bytes);
     if (!sample->data)
         return -1;
 
@@ -191,7 +191,7 @@ static int it_riff_am_process_pattern(IT_PATTERN *pattern, DUMBFILE *f,
 
     pattern->n_entries += nrows;
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
     if (!pattern->entry)
         return -1;
 
@@ -275,7 +275,7 @@ static DUMB_IT_SIGDATA *it_riff_amff_load_sigdata(DUMBFILE *f,
     if (stream->type != DUMB_ID('A', 'M', 'F', 'F'))
         goto error;
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         goto error;
 
@@ -401,13 +401,13 @@ static DUMB_IT_SIGDATA *it_riff_amff_load_sigdata(DUMBFILE *f,
         }
     }
 
-    sigdata->pattern = malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+    sigdata->pattern = dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern)
         goto error_usd;
     for (n = 0; n < sigdata->n_patterns; ++n)
         sigdata->pattern[n].entry = NULL;
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample)
         goto error_usd;
     for (n = 0; n < sigdata->n_samples; ++n) {
@@ -426,7 +426,7 @@ static DUMB_IT_SIGDATA *it_riff_amff_load_sigdata(DUMBFILE *f,
             sigdata->n_orders = dumbfile_getc(f) + 1;
             if ((unsigned)sigdata->n_orders + 1 > c->size)
                 goto error_usd;
-            sigdata->order = malloc(sigdata->n_orders);
+            sigdata->order = dumb_malloc(sigdata->n_orders);
             if (!sigdata->order)
                 goto error_usd;
             dumbfile_getnc((char *)sigdata->order, sigdata->n_orders, f);
@@ -474,7 +474,7 @@ error_usd:
     _dumb_it_unload_sigdata(sigdata);
     goto error;
 error_sd:
-    free(sigdata);
+    dumb_free(sigdata);
 error:
     return NULL;
 }
@@ -492,7 +492,7 @@ static DUMB_IT_SIGDATA *it_riff_am_load_sigdata(DUMBFILE *f,
     if (stream->type != DUMB_ID('A', 'M', ' ', ' '))
         goto error;
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         goto error;
 
@@ -645,13 +645,13 @@ static DUMB_IT_SIGDATA *it_riff_am_load_sigdata(DUMBFILE *f,
         }
     }
 
-    sigdata->pattern = malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+    sigdata->pattern = dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern)
         goto error_usd;
     for (n = 0; n < sigdata->n_patterns; ++n)
         sigdata->pattern[n].entry = NULL;
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample)
         goto error_usd;
     for (n = 0; n < sigdata->n_samples; ++n) {
@@ -670,7 +670,7 @@ static DUMB_IT_SIGDATA *it_riff_am_load_sigdata(DUMBFILE *f,
             sigdata->n_orders = dumbfile_getc(f) + 1;
             if ((unsigned)sigdata->n_orders + 1 > c->size)
                 goto error_usd;
-            sigdata->order = malloc(sigdata->n_orders);
+            sigdata->order = dumb_malloc(sigdata->n_orders);
             if (!sigdata->order)
                 goto error_usd;
             dumbfile_getnc((char *)sigdata->order, sigdata->n_orders, f);
@@ -754,7 +754,7 @@ error_usd:
     _dumb_it_unload_sigdata(sigdata);
     goto error;
 error_sd:
-    free(sigdata);
+    dumb_free(sigdata);
 error:
     return NULL;
 }

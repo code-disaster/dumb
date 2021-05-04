@@ -1,10 +1,11 @@
+#include "dumb.h"
 #include "internal/barray.h"
 
 #include <string.h>
 
 void *bit_array_create(size_t size) {
     size_t bsize = ((size + 7) >> 3) + sizeof(size_t);
-    void *ret = calloc(1, bsize);
+    void *ret = dumb_calloc(1, bsize);
     if (ret)
         *(size_t *)ret = size;
     return ret;
@@ -12,14 +13,14 @@ void *bit_array_create(size_t size) {
 
 void bit_array_destroy(void *array) {
     if (array)
-        free(array);
+        dumb_free(array);
 }
 
 void *bit_array_dup(void *array) {
     if (array) {
         size_t *size = (size_t *)array;
         size_t bsize = ((*size + 7) >> 3) + sizeof(*size);
-        void *ret = malloc(bsize);
+        void *ret = dumb_malloc(bsize);
         if (ret)
             memcpy(ret, array, bsize);
         return ret;

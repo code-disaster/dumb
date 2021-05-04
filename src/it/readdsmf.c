@@ -78,7 +78,7 @@ static int it_riff_dsmf_process_sample(IT_SAMPLE *sample, DUMBFILE *f,
         }
     }
 
-    sample->data = malloc(sample->length);
+    sample->data = dumb_malloc(sample->length);
     if (!sample->data)
         return -1;
 
@@ -139,7 +139,7 @@ static int it_riff_dsmf_process_pattern(IT_PATTERN *pattern, DUMBFILE *f,
     if (pattern->n_entries == 64)
         return 0;
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
     if (!pattern->entry)
         return -1;
 
@@ -221,7 +221,7 @@ static DUMB_IT_SIGDATA *it_riff_dsmf_load_sigdata(DUMBFILE *f,
     if (stream->type != DUMB_ID('D', 'S', 'M', 'F'))
         goto error;
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         goto error;
 
@@ -308,7 +308,7 @@ static DUMB_IT_SIGDATA *it_riff_dsmf_load_sigdata(DUMBFILE *f,
                 sigdata->channel_pan[o] = dumbfile_getc(f) / 2;
             }
 
-            sigdata->order = malloc(128);
+            sigdata->order = dumb_malloc(128);
             if (!sigdata->order)
                 goto error_usd;
             dumbfile_getnc((char *)sigdata->order, 128, f);
@@ -317,13 +317,13 @@ static DUMB_IT_SIGDATA *it_riff_dsmf_load_sigdata(DUMBFILE *f,
         }
     }
 
-    sigdata->pattern = malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+    sigdata->pattern = dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern)
         goto error_usd;
     for (n = 0; n < sigdata->n_patterns; ++n)
         sigdata->pattern[n].entry = NULL;
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample)
         goto error_usd;
     for (n = 0; n < sigdata->n_samples; ++n) {
@@ -368,7 +368,7 @@ error_usd:
     _dumb_it_unload_sigdata(sigdata);
     goto error;
 error_sd:
-    free(sigdata);
+    dumb_free(sigdata);
 error:
     return NULL;
 }

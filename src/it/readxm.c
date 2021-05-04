@@ -110,15 +110,15 @@ static void trim_whitespace(char *ptr, size_t size) {
  */
 static void *safe_realloc(void *ptr, size_t size) {
     if (ptr == NULL)
-        return malloc(size);
+        return dumb_malloc(size);
 
     if (size == 0) {
-        free(ptr);
+        dumb_free(ptr);
         return NULL;
     } else {
-        void *new_block = realloc(ptr, size);
+        void *new_block = dumb_realloc(ptr, size);
         if (!new_block)
-            free(ptr);
+            dumb_free(ptr);
         return new_block;
     }
 }
@@ -238,7 +238,7 @@ static int it_xm_read_pattern(IT_PATTERN *pattern, DUMBFILE *f, int n_channels,
         row++;
     }
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
     if (!pattern->entry)
         return -1;
 
@@ -351,7 +351,7 @@ static int limit_xm_resize(void *f, long n) {
         return -1;
     if (lx->buffered || n) {
         if (n > lx->allocated) {
-            unsigned char *buffered = realloc(lx->buffered, n);
+            unsigned char *buffered = dumb_realloc(lx->buffered, n);
             if (!buffered)
                 return -1;
             lx->buffered = buffered;
@@ -362,7 +362,7 @@ static int limit_xm_resize(void *f, long n) {
             return -1;
     } else if (!n) {
         if (lx->buffered)
-            free(lx->buffered);
+            dumb_free(lx->buffered);
         lx->buffered = NULL;
         lx->allocated = 0;
     }
@@ -412,9 +412,9 @@ static dumb_ssize_t limit_xm_getnc(char *ptr, size_t n, void *f) {
 static void limit_xm_close(void *f) {
     LIMITED_XM *lx = f;
     if (lx->buffered)
-        free(lx->buffered);
+        dumb_free(lx->buffered);
     /* Do NOT close lx->remaining */
-    free(f);
+    dumb_free(f);
 }
 
 /* These two can be stubs since this implementation doesn't use seeking */
@@ -438,7 +438,7 @@ DUMBFILE_SYSTEM limit_xm_dfs = {NULL,
                                 &limit_xm_get_size};
 
 static DUMBFILE *dumbfile_limit_xm(DUMBFILE *f) {
-    LIMITED_XM *lx = malloc(sizeof(*lx));
+    LIMITED_XM *lx = dumb_malloc(sizeof(*lx));
     lx->remaining = f;
     lx->buffered = NULL;
     lx->ptr = 0;
@@ -730,7 +730,7 @@ static int it_xm_read_sample_data(IT_SAMPLE *sample, unsigned char roguebytes,
     n_channels = sample->flags & IT_SAMPLE_STEREO ? 2 : 1;
     datasize = sample->length * n_channels;
 
-    sample->data = malloc(datasize * (sample->flags & IT_SAMPLE_16BIT ? 2 : 1));
+    sample->data = dumb_malloc(datasize * (sample->flags & IT_SAMPLE_16BIT ? 2 : 1));
     if (!sample->data)
         return -1;
 
@@ -803,13 +803,13 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
         return NULL;
     }
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         return NULL;
 
     /* song name */
     if (dumbfile_getnc((char *)sigdata->name, 20, f) < 20) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
     sigdata->name[20] = 0;
@@ -817,13 +817,13 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
 
     if (dumbfile_getc(f) != 0x1A) {
         TRACE("XM error: 0x1A not found\n");
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
     /* tracker name */
     if (dumbfile_skip(f, 20)) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -831,7 +831,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
     *version = dumbfile_igetw(f);
     if (*version > 0x0104 || *version < 0x0102) {
         TRACE("XM error: wrong format version\n");
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -845,7 +845,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
     header_size = dumbfile_igetl(f);
     if (header_size < (4 + 2 * 8 + 1) || header_size > 0x114) {
         TRACE("XM error: unexpected header size\n");
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -896,7 +896,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
     // sigdata->restart_position = 0;
 
     /* order table */
-    sigdata->order = malloc(sigdata->n_orders * sizeof(*sigdata->order));
+    sigdata->order = dumb_malloc(sigdata->n_orders * sizeof(*sigdata->order));
     if (!sigdata->order) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -917,7 +917,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
         */
 
         sigdata->pattern =
-            malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+            dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
         if (!sigdata->pattern) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -927,7 +927,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
 
         {
             unsigned char *buffer =
-                malloc(1280 * n_channels); /* 256 rows * 5 bytes */
+                dumb_malloc(1280 * n_channels); /* 256 rows * 5 bytes */
             if (!buffer) {
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
@@ -935,12 +935,12 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
             for (i = 0; i < sigdata->n_patterns; i++) {
                 if (it_xm_read_pattern(&sigdata->pattern[i], f, n_channels,
                                        buffer, *version) != 0) {
-                    free(buffer);
+                    dumb_free(buffer);
                     _dumb_it_unload_sigdata(sigdata);
                     return NULL;
                 }
             }
-            free(buffer);
+            dumb_free(buffer);
         }
 
         /*
@@ -950,7 +950,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
         */
 
         sigdata->instrument =
-            malloc(sigdata->n_instruments * sizeof(*sigdata->instrument));
+            dumb_malloc(sigdata->n_instruments * sizeof(*sigdata->instrument));
         if (!sigdata->instrument) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -1075,16 +1075,16 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
         */
 
         unsigned char *roguebytes =
-            malloc(sigdata->n_instruments * XM_MAX_SAMPLES_PER_INSTRUMENT);
+            dumb_malloc(sigdata->n_instruments * XM_MAX_SAMPLES_PER_INSTRUMENT);
         if (!roguebytes) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
 
         sigdata->instrument =
-            malloc(sigdata->n_instruments * sizeof(*sigdata->instrument));
+            dumb_malloc(sigdata->n_instruments * sizeof(*sigdata->instrument));
         if (!sigdata->instrument) {
-            free(roguebytes);
+            dumb_free(roguebytes);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
@@ -1097,7 +1097,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
 
             DUMBFILE *lf = dumbfile_limit_xm(f);
             if (!lf) {
-                free(roguebytes);
+                dumb_free(roguebytes);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -1106,7 +1106,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
                 0) {
                 TRACE("XM error: instrument %d\n", i + 1);
                 dumbfile_close(lf);
-                free(roguebytes);
+                dumb_free(roguebytes);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -1121,7 +1121,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
                                          (total_samples + extra.n_samples));
                 if (!sigdata->sample) {
                     dumbfile_close(lf);
-                    free(roguebytes);
+                    dumb_free(roguebytes);
                     _dumb_it_unload_sigdata(sigdata);
                     return NULL;
                 }
@@ -1131,7 +1131,7 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
 
                 if (limit_xm_resize(lf, 0) < 0) {
                     dumbfile_close(lf);
-                    free(roguebytes);
+                    dumb_free(roguebytes);
                     _dumb_it_unload_sigdata(sigdata);
                     return NULL;
                 }
@@ -1142,13 +1142,13 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
                     int b;
                     if (limit_xm_resize(lf, extra.sample_header_size) < 0) {
                         dumbfile_close(lf);
-                        free(roguebytes);
+                        dumb_free(roguebytes);
                         _dumb_it_unload_sigdata(sigdata);
                         return NULL;
                     }
                     b = it_xm_read_sample_header(sample, lf);
                     if (b < 0) {
-                        free(roguebytes);
+                        dumb_free(roguebytes);
                         _dumb_it_unload_sigdata(sigdata);
                         return NULL;
                     }
@@ -1180,9 +1180,9 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
         */
 
         sigdata->pattern =
-            malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+            dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
         if (!sigdata->pattern) {
-            free(roguebytes);
+            dumb_free(roguebytes);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
@@ -1191,35 +1191,35 @@ static DUMB_IT_SIGDATA *it_xm_load_sigdata(DUMBFILE *f, int *version) {
 
         {
             unsigned char *buffer =
-                malloc(1280 * n_channels); /* 256 rows * 5 bytes */
+                dumb_malloc(1280 * n_channels); /* 256 rows * 5 bytes */
             if (!buffer) {
-                free(roguebytes);
+                dumb_free(roguebytes);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
             for (i = 0; i < sigdata->n_patterns; i++) {
                 if (it_xm_read_pattern(&sigdata->pattern[i], f, n_channels,
                                        buffer, *version) != 0) {
-                    free(buffer);
-                    free(roguebytes);
+                    dumb_free(buffer);
+                    dumb_free(roguebytes);
                     _dumb_it_unload_sigdata(sigdata);
                     return NULL;
                 }
             }
-            free(buffer);
+            dumb_free(buffer);
         }
 
         // and now we load the sample data
         for (j = 0; j < total_samples; j++) {
             if (it_xm_read_sample_data(&sigdata->sample[j], roguebytes[j], f) !=
                 0) {
-                free(roguebytes);
+                dumb_free(roguebytes);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
         }
 
-        free(roguebytes);
+        dumb_free(roguebytes);
     }
 
     sigdata->flags = IT_WAS_AN_XM | IT_OLD_EFFECTS | IT_COMPATIBLE_GXX |

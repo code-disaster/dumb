@@ -31,6 +31,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#include "dumb.h"
 #include "internal/resampler.h"
 
 enum { RESAMPLER_SHIFT = 10 };
@@ -148,7 +149,7 @@ typedef struct resampler {
 } resampler;
 
 void *resampler_create(void) {
-    resampler *r = (resampler *)malloc(sizeof(resampler));
+    resampler *r = (resampler *)dumb_malloc(sizeof(resampler));
     if (!r)
         return 0;
 
@@ -171,10 +172,10 @@ void *resampler_create(void) {
     return r;
 }
 
-void resampler_delete(void *_r) { free(_r); }
+void resampler_delete(void *_r) { dumb_free(_r); }
 
 void *resampler_dup(const void *_r) {
-    void *r_out = malloc(sizeof(resampler));
+    void *r_out = dumb_malloc(sizeof(resampler));
     if (!r_out)
         return 0;
 

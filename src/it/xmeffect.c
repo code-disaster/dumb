@@ -27,13 +27,13 @@
 #if 0
 unsigned char **_dumb_malloc2(int w, int h)
 {
-	unsigned char **line =  malloc(h * sizeof(*line));
+	unsigned char **line =  dumb_malloc(h * sizeof(*line));
 	int i;
 	if (!line) return NULL;
 
-	line[0] = malloc(w * h * sizeof(*line[0]));
+	line[0] = dumb_malloc(w * h * sizeof(*line[0]));
 	if (!line[0]) {
-		free(line);
+		dumb_free(line);
 		return NULL;
 	}
 
@@ -51,8 +51,8 @@ void _dumb_free2(unsigned char **line)
 {
 	if (line) {
 		if (line[0])
-			free(line[0]);
-		free(line);
+			dumb_free(line[0]);
+		dumb_free(line);
 	}
 }
 

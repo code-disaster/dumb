@@ -28,7 +28,7 @@ typedef struct dumb_packfile {
 } dumb_packfile;
 
 static void *dumb_packfile_open_ex(PACKFILE *p, long size) {
-    dumb_packfile *file = (dumb_packfile *)malloc(sizeof(dumb_packfile));
+    dumb_packfile *file = (dumb_packfile *)dumb_malloc(sizeof(dumb_packfile));
     if (!file)
         return 0;
     file->p = p;
@@ -73,10 +73,10 @@ static dumb_ssize_t dumb_packfile_getnc(char *ptr, size_t n, void *f) {
 static void dumb_packfile_close(void *f) {
     dumb_packfile *file = (dumb_packfile *)f;
     pack_fclose(file->p);
-    free(f);
+    dumb_free(f);
 }
 
-static void dumb_packfile_noclose(void *f) { free(f); }
+static void dumb_packfile_noclose(void *f) { dumb_free(f); }
 
 static int dumb_packfile_seek(void *f, dumb_off_t n) {
     dumb_packfile *file = (dumb_packfile *)f;

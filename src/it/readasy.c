@@ -48,7 +48,7 @@ static int it_asy_read_pattern(IT_PATTERN *pattern, DUMBFILE *f,
         }
     }
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
     if (!pattern->entry)
         return -1;
 
@@ -164,7 +164,7 @@ static int it_asy_read_sample_data(IT_SAMPLE *sample, DUMBFILE *f) {
         truncated_size = 0;
     }
 
-    sample->data = malloc(sample->length);
+    sample->data = dumb_malloc(sample->length);
 
     if (!sample->data)
         return -1;
@@ -193,7 +193,7 @@ static DUMB_IT_SIGDATA *it_asy_load_sigdata(DUMBFILE *f) {
         return NULL;
     }
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata) {
         return NULL;
     }
@@ -207,31 +207,31 @@ static DUMB_IT_SIGDATA *it_asy_load_sigdata(DUMBFILE *f) {
 
     if (dumbfile_error(f) || !sigdata->n_samples || sigdata->n_samples > 64 ||
         !sigdata->n_patterns || !sigdata->n_orders) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
     if (sigdata->restart_position > sigdata->n_orders) /* XXX */
         sigdata->restart_position = 0;
 
-    sigdata->order = malloc(sigdata->n_orders);
+    sigdata->order = dumb_malloc(sigdata->n_orders);
     if (!sigdata->order) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
     if (dumbfile_getnc((char *)sigdata->order, sigdata->n_orders, f) !=
             sigdata->n_orders ||
         dumbfile_skip(f, 256 - sigdata->n_orders)) {
-        free(sigdata->order);
-        free(sigdata);
+        dumb_free(sigdata->order);
+        dumb_free(sigdata);
         return NULL;
     }
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample) {
-        free(sigdata->order);
-        free(sigdata);
+        dumb_free(sigdata->order);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -258,7 +258,7 @@ static DUMB_IT_SIGDATA *it_asy_load_sigdata(DUMBFILE *f) {
         return NULL;
     }
 
-    sigdata->pattern = malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+    sigdata->pattern = dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -269,19 +269,19 @@ static DUMB_IT_SIGDATA *it_asy_load_sigdata(DUMBFILE *f) {
     /* Read in the patterns */
     {
         unsigned char *buffer =
-            malloc(64 * 8 * 4); /* 64 rows * 8 channels * 4 bytes */
+            dumb_malloc(64 * 8 * 4); /* 64 rows * 8 channels * 4 bytes */
         if (!buffer) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
         for (i = 0; i < sigdata->n_patterns; ++i) {
             if (it_asy_read_pattern(&sigdata->pattern[i], f, buffer) != 0) {
-                free(buffer);
+                dumb_free(buffer);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
         }
-        free(buffer);
+        dumb_free(buffer);
     }
 
     /* And finally, the sample data */

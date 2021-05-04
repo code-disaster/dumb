@@ -203,7 +203,7 @@ static int it_amf_process_pattern(IT_PATTERN *pattern, IT_ENTRY *entry_table,
 
     pattern->n_entries = n_entries;
 
-    pattern->entry = entry = malloc(n_entries * sizeof(IT_ENTRY));
+    pattern->entry = entry = dumb_malloc(n_entries * sizeof(IT_ENTRY));
     if (!entry) {
         return -1;
     }
@@ -277,7 +277,7 @@ static int it_amf_read_sample_header(IT_SAMPLE *sample, DUMBFILE *f,
 static int it_amf_read_sample_data(IT_SAMPLE *sample, DUMBFILE *f) {
     int i, read_length = 0;
 
-    sample->data = malloc(sample->length);
+    sample->data = dumb_malloc(sample->length);
 
     if (!sample->data)
         return -1;
@@ -325,7 +325,7 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
         return NULL;
     }
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata) {
         return NULL;
     }
@@ -341,7 +341,7 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
         sigdata->n_samples > 255 || sigdata->n_orders < 1 ||
         sigdata->n_orders > 255 || !ntracks || nchannels < 1 ||
         nchannels > 32) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -379,17 +379,17 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
             sigdata->speed = i;
     }
 
-    sigdata->order = malloc(sigdata->n_orders);
+    sigdata->order = dumb_malloc(sigdata->n_orders);
     if (!sigdata->order) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
     orderstotracks =
-        malloc(sigdata->n_orders * nchannels * sizeof(unsigned short));
+        dumb_malloc(sigdata->n_orders * nchannels * sizeof(unsigned short));
     if (!orderstotracks) {
-        free(sigdata->order);
-        free(sigdata);
+        dumb_free(sigdata->order);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -405,17 +405,17 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
     }
 
     if (dumbfile_error(f)) {
-        free(orderstotracks);
-        free(sigdata->order);
-        free(sigdata);
+        dumb_free(orderstotracks);
+        dumb_free(sigdata->order);
+        dumb_free(sigdata);
         return NULL;
     }
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample) {
-        free(orderstotracks);
-        free(sigdata->order);
-        free(sigdata);
+        dumb_free(orderstotracks);
+        dumb_free(sigdata->order);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -444,14 +444,14 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
 
     sigdata->n_patterns = sigdata->n_orders;
 
-    sigdata->pattern = malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+    sigdata->pattern = dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern) {
         goto error_ott;
     }
     for (i = 0; i < sigdata->n_patterns; ++i)
         sigdata->pattern[i].entry = NULL;
 
-    trackmap = malloc(ntracks * sizeof(unsigned short));
+    trackmap = dumb_malloc(ntracks * sizeof(unsigned short));
     if (!trackmap) {
         goto error_ott;
     }
@@ -468,7 +468,7 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
             realntracks = trackmap[i];
     }
 
-    track = calloc(realntracks, sizeof(unsigned char *));
+    track = dumb_calloc(realntracks, sizeof(unsigned char *));
     if (!track) {
         goto error_tm;
     }
@@ -476,7 +476,7 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
     for (i = 0; i < realntracks; i++) {
         int tracksize = dumbfile_igetw(f);
         tracksize += dumbfile_getc(f) << 16;
-        track[i] = malloc(tracksize * 3 + 3);
+        track[i] = dumb_malloc(tracksize * 3 + 3);
         if (!track[i]) {
             goto error_all;
         }
@@ -503,7 +503,7 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
     /* Process tracks into patterns */
     for (i = 0; i < sigdata->n_patterns; i++) {
         IT_ENTRY *entry_table =
-            calloc(tracksize[i] * nchannels, sizeof(IT_ENTRY));
+            dumb_calloc(tracksize[i] * nchannels, sizeof(IT_ENTRY));
         if (!entry_table) {
             goto error_all;
         }
@@ -522,10 +522,10 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
         }
         if (it_amf_process_pattern(&sigdata->pattern[i], entry_table,
                                    tracksize[i], nchannels)) {
-            free(entry_table);
+            dumb_free(entry_table);
             goto error_all;
         }
-        free(entry_table);
+        dumb_free(entry_table);
     }
 
     /* Now let's initialise the remaining variables, and we're done! */
@@ -538,12 +538,12 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
 
     for (i = 0; i < realntracks; i++) {
         if (track[i]) {
-            free(track[i]);
+            dumb_free(track[i]);
         }
     }
-    free(track);
-    free(trackmap);
-    free(orderstotracks);
+    dumb_free(track);
+    dumb_free(trackmap);
+    dumb_free(orderstotracks);
 
     if (_dumb_it_fix_invalid_orders(sigdata) < 0) {
         _dumb_it_unload_sigdata(sigdata);
@@ -555,14 +555,14 @@ static DUMB_IT_SIGDATA *it_amf_load_sigdata(DUMBFILE *f, int *version) {
 error_all:
     for (i = 0; i < realntracks; i++) {
         if (track[i]) {
-            free(track[i]);
+            dumb_free(track[i]);
         }
     }
-    free(track);
+    dumb_free(track);
 error_tm:
-    free(trackmap);
+    dumb_free(trackmap);
 error_ott:
-    free(orderstotracks);
+    dumb_free(orderstotracks);
     _dumb_it_unload_sigdata(sigdata);
     return NULL;
 }

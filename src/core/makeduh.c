@@ -31,7 +31,7 @@ static DUH_SIGNAL *make_signal(DUH_SIGTYPE_DESC *desc, sigdata_t *sigdata) {
     ASSERT(desc->sigrenderer_generate_samples &&
            desc->sigrenderer_get_current_sample);
 
-    signal = malloc(sizeof(*signal));
+    signal = dumb_malloc(sizeof(*signal));
 
     if (!signal) {
         if (desc->unload_sigdata)
@@ -48,17 +48,17 @@ static DUH_SIGNAL *make_signal(DUH_SIGTYPE_DESC *desc, sigdata_t *sigdata) {
 
 DUH *make_duh(dumb_off_t length, int n_tags, const char *const tags[][2],
               int n_signals, DUH_SIGTYPE_DESC *desc[], sigdata_t *sigdata[]) {
-    DUH *duh = malloc(sizeof(*duh));
+    DUH *duh = dumb_malloc(sizeof(*duh));
     int i;
     int fail;
 
     if (duh) {
         duh->n_signals = n_signals;
 
-        duh->signal = malloc(n_signals * sizeof(*duh->signal));
+        duh->signal = dumb_malloc(n_signals * sizeof(*duh->signal));
 
         if (!duh->signal) {
-            free(duh);
+            dumb_free(duh);
             duh = NULL;
         }
     }
@@ -99,12 +99,12 @@ DUH *make_duh(dumb_off_t length, int n_tags, const char *const tags[][2],
         if (mem <= 0)
             return duh;
 
-        duh->tag = malloc(n_tags * sizeof(*duh->tag));
+        duh->tag = dumb_malloc(n_tags * sizeof(*duh->tag));
         if (!duh->tag)
             return duh;
-        duh->tag[0][0] = malloc(mem);
+        duh->tag[0][0] = dumb_malloc(mem);
         if (!duh->tag[0][0]) {
-            free(duh->tag);
+            dumb_free(duh->tag);
             duh->tag = NULL;
             return duh;
         }
@@ -129,7 +129,7 @@ int duh_add_signal(DUH *duh, DUH_SIGTYPE_DESC *desc, sigdata_t *sigdata) {
     if (!duh || !desc || !sigdata)
         return -1;
 
-    signal = (DUH_SIGNAL **)realloc(duh->signal, (duh->n_signals + 1) *
+    signal = (DUH_SIGNAL **)dumb_realloc(duh->signal, (duh->n_signals + 1) *
                                                      sizeof(*duh->signal));
     if (!signal)
         return -1;

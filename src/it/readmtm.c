@@ -56,7 +56,7 @@ static int it_mtm_assemble_pattern(IT_PATTERN *pattern,
         }
     }
 
-    entry = malloc(pattern->n_entries * sizeof(*entry));
+    entry = dumb_malloc(pattern->n_entries * sizeof(*entry));
     if (!entry)
         return -1;
     pattern->entry = entry;
@@ -169,7 +169,7 @@ static int it_mtm_read_sample_data(IT_SAMPLE *sample, DUMBFILE *f,
 
     bytes_per_sample = (sample->flags & IT_SAMPLE_16BIT) ? 2 : 1;
 
-    sample->data = malloc(sample->length * bytes_per_sample);
+    sample->data = dumb_malloc(sample->length * bytes_per_sample);
 
     if (!sample->data)
         return -1;
@@ -207,7 +207,7 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
 
     *version = dumbfile_getc(f);
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         goto error;
 
@@ -251,7 +251,7 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
         sigdata->channel_pan[n + 3] = 32 - sep;
     }
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample)
         goto error_sd;
 
@@ -279,7 +279,7 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
     for (n = 0; n < sigdata->n_samples; n++)
         sigdata->sample[n].data = NULL;
 
-    skip_bytes = calloc(sizeof(int), sigdata->n_samples);
+    skip_bytes = dumb_calloc(sizeof(int), sigdata->n_samples);
     if (!skip_bytes)
         goto error_usd;
 
@@ -288,7 +288,7 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
             goto error_sb;
     }
 
-    sigdata->order = malloc(sigdata->n_orders);
+    sigdata->order = dumb_malloc(sigdata->n_orders);
     if (!sigdata->order)
         goto error_sb;
 
@@ -299,20 +299,20 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
         if (dumbfile_skip(f, 128 - sigdata->n_orders))
             goto error_sb;
 
-    track = malloc(192 * n_tracks);
+    track = dumb_malloc(192 * n_tracks);
     if (!track)
         goto error_sb;
 
     if (dumbfile_getnc((char *)track, 192 * n_tracks, f) < 192 * n_tracks)
         goto error_ft;
 
-    sigdata->pattern = malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+    sigdata->pattern = dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern)
         goto error_ft;
     for (n = 0; n < sigdata->n_patterns; n++)
         sigdata->pattern[n].entry = NULL;
 
-    sequence = malloc(sigdata->n_patterns * 32 * sizeof(*sequence));
+    sequence = dumb_malloc(sigdata->n_patterns * 32 * sizeof(*sequence));
     if (!sequence)
         goto error_ft;
 
@@ -334,7 +334,7 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
     }
 
     if (l_comment) {
-        comment = malloc(l_comment);
+        comment = dumb_malloc(l_comment);
         if (!comment)
             goto error_fs;
         if (dumbfile_getnc(comment, l_comment, f) < l_comment)
@@ -361,7 +361,7 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
 
             l -= 1;
 
-            sigdata->song_message = malloc(l);
+            sigdata->song_message = dumb_malloc(l);
             if (!sigdata->song_message)
                 goto error_fc;
 
@@ -381,7 +381,7 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
             sigdata->song_message[m] = 0;
         }
 
-        free(comment);
+        dumb_free(comment);
     }
 
     for (n = 0; n < sigdata->n_samples; n++) {
@@ -389,9 +389,9 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
             goto error_fs;
     }
 
-    free(sequence);
-    free(track);
-    free(skip_bytes);
+    dumb_free(sequence);
+    dumb_free(track);
+    dumb_free(skip_bytes);
 
     if (_dumb_it_fix_invalid_orders(sigdata) < 0) {
         _dumb_it_unload_sigdata(sigdata);
@@ -401,19 +401,19 @@ static DUMB_IT_SIGDATA *it_mtm_load_sigdata(DUMBFILE *f, int *version) {
     return sigdata;
 
 error_fc:
-    free(comment);
+    dumb_free(comment);
 error_fs:
-    free(sequence);
+    dumb_free(sequence);
 error_ft:
-    free(track);
+    dumb_free(track);
 error_sb:
-    free(skip_bytes);
+    dumb_free(skip_bytes);
 error_usd:
     _dumb_it_unload_sigdata(sigdata);
     return NULL;
 
 error_sd:
-    free(sigdata);
+    dumb_free(sigdata);
 error:
     return NULL;
 }

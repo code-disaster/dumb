@@ -35,7 +35,7 @@ static void destroy_sigtypes(void) {
 
     while (desc_link) {
         next = desc_link->next;
-        free(desc_link);
+        dumb_free(desc_link);
         desc_link = next;
     }
 }
@@ -70,7 +70,7 @@ void dumb_register_sigtype(DUH_SIGTYPE_DESC *desc) {
     } else
         dumb_atexit(&destroy_sigtypes);
 
-    desc_link = *sigtype_desc_tail = malloc(sizeof(DUH_SIGTYPE_DESC_LINK));
+    desc_link = *sigtype_desc_tail = dumb_malloc(sizeof(DUH_SIGTYPE_DESC_LINK));
 
     if (!desc_link)
         return;

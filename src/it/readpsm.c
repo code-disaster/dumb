@@ -138,7 +138,7 @@ static int it_psm_process_sample(IT_SAMPLE *sample, const unsigned char *data,
         }
     }
 
-    sample->data = malloc(sample->length);
+    sample->data = dumb_malloc(sample->length);
     if (!sample->data)
         return -1;
 
@@ -249,7 +249,7 @@ static int it_psm_process_pattern(IT_PATTERN *pattern,
             pattern->n_entries++;
     }
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
     if (!pattern->entry)
         return -1;
 
@@ -497,10 +497,10 @@ static void free_chunks(PSMCHUNK *chunk, int count) {
 
     for (n = 0; n < count; n++) {
         if (chunk[n].data)
-            free(chunk[n].data);
+            dumb_free(chunk[n].data);
     }
 
-    free(chunk);
+    dumb_free(chunk);
 }
 
 static void dumb_it_optimize_orders(DUMB_IT_SIGDATA *sigdata);
@@ -544,7 +544,7 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
     if (dumbfile_mgetl(f) != DUMB_ID('F', 'I', 'L', 'E'))
         goto error;
 
-    chunk = calloc(768, sizeof(*chunk));
+    chunk = dumb_calloc(768, sizeof(*chunk));
 
     while (length >= 8) {
         if (n_chunks >= 768)
@@ -556,11 +556,11 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
             goto error_fc;
         chunk[n_chunks].len = n;
         if (n) {
-            ptr = malloc(n);
+            ptr = dumb_malloc(n);
             if (!ptr)
                 goto error_fc;
             if (dumbfile_getnc((char *)ptr, n, f) < n) {
-                free(ptr);
+                dumb_free(ptr);
                 goto error_fc;
             }
             chunk[n_chunks].data = ptr;
@@ -572,7 +572,7 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
     if (!n_chunks)
         goto error_fc;
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         goto error_fc;
 
@@ -651,7 +651,7 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
             ptr += 11;
             songchunk = 0;
             if (length >= 8) {
-                songchunk = malloc(256 * sizeof(*songchunk));
+                songchunk = dumb_malloc(256 * sizeof(*songchunk));
                 if (!songchunk)
                     goto error_usd;
                 while (length >= 8) {
@@ -749,7 +749,7 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
             o = ptr[0] | (ptr[1] << 8);
             if (!o)
                 goto error_sc;
-            event = malloc(o * sizeof(*event));
+            event = dumb_malloc(o * sizeof(*event));
             if (!event)
                 goto error_sc;
             length = (int)(c->len - 2);
@@ -866,7 +866,7 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
     memset(vol, 255, sizeof(vol));
 
     sigdata->n_patterns = n_events;
-    sigdata->pattern = malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+    sigdata->pattern = dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern)
         goto error_ev;
     for (n = 0; n < sigdata->n_patterns; n++)
@@ -1030,7 +1030,7 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
     if (n_patterns > 256)
         goto error_ev;
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample)
         goto error_ev;
     for (n = 0; n < sigdata->n_samples; n++) {
@@ -1052,14 +1052,14 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
     sigdata->n_orders = n_patterns;
     sigdata->n_patterns = n_patterns;
 
-    sigdata->order = malloc(n_patterns);
+    sigdata->order = dumb_malloc(n_patterns);
 
     for (n = 0; n < n_patterns; n++) {
         sigdata->order[n] = n;
     }
 
-    free(event);
-    free(songchunk);
+    dumb_free(event);
+    dumb_free(songchunk);
     free_chunks(chunk, n_chunks);
 
     if (_dumb_it_fix_invalid_orders(sigdata) < 0) {
@@ -1072,15 +1072,15 @@ static DUMB_IT_SIGDATA *it_psm_load_sigdata(DUMBFILE *f, int *ver,
     return sigdata;
 
 error_ev:
-    free(event);
+    dumb_free(event);
 error_sc:
     if (songchunk)
-        free(songchunk);
+        dumb_free(songchunk);
 error_usd:
     _dumb_it_unload_sigdata(sigdata);
     goto error_fc;
 error_sd:
-    free(sigdata);
+    dumb_free(sigdata);
 error_fc:
     free_chunks(chunk, n_chunks);
 error:
@@ -1172,7 +1172,7 @@ entry->effectvalue;
         if (current < end) {
                 IT_ENTRY * opt;
                 pattern->n_entries = current - pattern->entry;
-                opt = realloc(pattern->entry, pattern->n_entries *
+                opt = dumb_realloc(pattern->entry, pattern->n_entries *
 sizeof(*pattern->entry)); if (opt) pattern->entry = opt;
         }
 }
@@ -1215,7 +1215,7 @@ static void dumb_it_optimize_orders(DUMB_IT_SIGDATA *sigdata) {
         return;
 
     n_patterns = 0;
-    order_list = malloc(sigdata->n_orders);
+    order_list = dumb_malloc(sigdata->n_orders);
 
     if (!order_list)
         return;
@@ -1233,7 +1233,7 @@ static void dumb_it_optimize_orders(DUMB_IT_SIGDATA *sigdata) {
     }
 
     if (!n_patterns) {
-        free(order_list);
+        dumb_free(order_list);
         return;
     }
 
@@ -1272,9 +1272,9 @@ static void dumb_it_optimize_orders(DUMB_IT_SIGDATA *sigdata) {
 
     n_patterns = o + 1;
 
-    pattern = malloc(n_patterns * sizeof(*pattern));
+    pattern = dumb_malloc(n_patterns * sizeof(*pattern));
     if (!pattern) {
-        free(order_list);
+        dumb_free(order_list);
         return;
     }
 
@@ -1289,11 +1289,11 @@ static void dumb_it_optimize_orders(DUMB_IT_SIGDATA *sigdata) {
         }
         if (o == n_patterns) {
             if (sigdata->pattern[n].entry)
-                free(sigdata->pattern[n].entry);
+                dumb_free(sigdata->pattern[n].entry);
         }
     }
 
-    free(sigdata->pattern);
+    dumb_free(sigdata->pattern);
     sigdata->pattern = pattern;
     sigdata->n_patterns = n_patterns;
 
@@ -1306,7 +1306,7 @@ static void dumb_it_optimize_orders(DUMB_IT_SIGDATA *sigdata) {
         }
     }
 
-    free(order_list);
+    dumb_free(order_list);
 }
 
 int dumb_get_psm_subsong_count(DUMBFILE *f) {

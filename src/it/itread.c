@@ -50,13 +50,13 @@ static int readblock(DUMBFILE *f, readblock_crap *crap) {
     if (size < 0)
         return (int)size;
 
-    crap->sourcebuf = malloc(size);
+    crap->sourcebuf = dumb_malloc(size);
     if (!crap->sourcebuf)
         return -1;
 
     c = (int)dumbfile_getnc((char *)crap->sourcebuf, size, f);
     if (c < size) {
-        free(crap->sourcebuf);
+        dumb_free(crap->sourcebuf);
         crap->sourcebuf = NULL;
         return -1;
     }
@@ -68,7 +68,7 @@ static int readblock(DUMBFILE *f, readblock_crap *crap) {
 }
 
 static void freeblock(readblock_crap *crap) {
-    free(crap->sourcebuf);
+    dumb_free(crap->sourcebuf);
     crap->sourcebuf = NULL;
 }
 
@@ -644,7 +644,7 @@ static long it_read_sample_data(IT_SAMPLE *sample, unsigned char convert,
     if (sample->flags & IT_SAMPLE_STEREO)
         datasize <<= 1;
 
-    sample->data = malloc(datasize * (sample->flags & IT_SAMPLE_16BIT ? 2 : 1));
+    sample->data = dumb_malloc(datasize * (sample->flags & IT_SAMPLE_16BIT ? 2 : 1));
     if (!sample->data)
         return -1;
 
@@ -813,7 +813,7 @@ static int it_read_pattern(IT_PATTERN *pattern, DUMBFILE *f,
 
     pattern->n_entries = n_entries;
 
-    pattern->entry = malloc(n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(n_entries * sizeof(*pattern->entry));
 
     if (!pattern->entry)
         return -1;
@@ -989,7 +989,7 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
         return NULL;
     }
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
 
     if (!sigdata) {
         return NULL;
@@ -1049,7 +1049,7 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
         return NULL;
     }
 
-    sigdata->order = malloc(sigdata->n_orders);
+    sigdata->order = dumb_malloc(sigdata->n_orders);
     if (!sigdata->order) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -1057,7 +1057,7 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
 
     if (sigdata->n_instruments) {
         sigdata->instrument =
-            malloc(sigdata->n_instruments * sizeof(*sigdata->instrument));
+            dumb_malloc(sigdata->n_instruments * sizeof(*sigdata->instrument));
         if (!sigdata->instrument) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -1065,7 +1065,7 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
     }
 
     if (sigdata->n_samples) {
-        sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+        sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
         if (!sigdata->sample) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -1076,7 +1076,7 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
 
     if (sigdata->n_patterns) {
         sigdata->pattern =
-            malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+            dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
         if (!sigdata->pattern) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -1095,7 +1095,7 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
     min_components = (special & 1) + sigdata->n_instruments +
                      sigdata->n_samples + sigdata->n_patterns;
 
-    component = malloc(min_components * sizeof(*component));
+    component = dumb_malloc(min_components * sizeof(*component));
     if (!component) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -1140,7 +1140,7 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
     }
 
     if (dumbfile_error(f)) {
-        free(component);
+        dumb_free(component);
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
@@ -1160,9 +1160,9 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
         /* MIDI configuration is embedded. */
         unsigned char mididata[32];
         int i;
-        sigdata->midi = malloc(sizeof(*sigdata->midi));
+        sigdata->midi = dumb_malloc(sizeof(*sigdata->midi));
         if (!sigdata->midi) {
-            free(component);
+            dumb_free(component);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
             // Should we be happy with this outcome in some situations?
@@ -1170,14 +1170,14 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
         // What are we skipping?
         i = dumbfile_igetw(f);
         if (dumbfile_error(f) || dumbfile_skip(f, 8 * i)) {
-            free(component);
+            dumb_free(component);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
         /* Read embedded MIDI configuration */
         // What are the first 9 commands for?
         if (dumbfile_skip(f, 32 * 9)) {
-            free(component);
+            dumb_free(component);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
@@ -1185,7 +1185,7 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
             unsigned char len = 0;
             int j, leftdigit = -1;
             if (dumbfile_getnc((char *)mididata, 32, f) < 32) {
-                free(component);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -1248,9 +1248,9 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
 
     qsort(component, n_components, sizeof(IT_COMPONENT), &it_component_compare);
 
-    buffer = malloc(65536);
+    buffer = dumb_malloc(65536);
     if (!buffer) {
-        free(component);
+        dumb_free(component);
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
@@ -1280,8 +1280,8 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
         }
 
         if (dumbfile_seek(f, component[n].offset, DFS_SEEK_SET)) {
-            free(buffer);
-            free(component);
+            dumb_free(buffer);
+            dumb_free(component);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
@@ -1294,12 +1294,12 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
                     min(message_length,
                         (int)(component[n + 1].offset - component[n].offset));
             }
-            sigdata->song_message = malloc(message_length + 1);
+            sigdata->song_message = dumb_malloc(message_length + 1);
             if (sigdata->song_message) {
                 if (dumbfile_getnc((char *)sigdata->song_message,
                                    message_length, f) < message_length) {
-                    free(buffer);
-                    free(component);
+                    dumb_free(buffer);
+                    dumb_free(component);
                     _dumb_it_unload_sigdata(sigdata);
                     return NULL;
                 }
@@ -1319,8 +1319,8 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
                         : 0);
 
             if (m) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -1328,8 +1328,8 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
 
         case IT_COMPONENT_PATTERN:
             if (it_read_pattern(&sigdata->pattern[component[n].n], f, buffer)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -1339,8 +1339,8 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
             if (it_read_sample_header(&sigdata->sample[component[n].n],
                                       &sample_convert[component[n].n], &offset,
                                       f)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -1369,16 +1369,16 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
 
         while (m >= 0) {
             if (dumbfile_seek(f, component[m].offset, DFS_SEEK_SET)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
 
             if (it_read_sample_data(&sigdata->sample[component[m].n],
                                     sample_convert[component[m].n], f)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -1435,8 +1435,8 @@ static sigdata_t *it_load_sigdata(DUMBFILE *f) {
         }
     }
 
-    free(buffer);
-    free(component);
+    dumb_free(buffer);
+    dumb_free(component);
 
     if (_dumb_it_fix_invalid_orders(sigdata) < 0) {
         _dumb_it_unload_sigdata(sigdata);

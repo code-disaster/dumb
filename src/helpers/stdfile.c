@@ -27,19 +27,19 @@ typedef struct dumb_stdfile {
 } dumb_stdfile;
 
 static void *dumb_stdfile_open(const char *filename) {
-    dumb_stdfile *file = (dumb_stdfile *)malloc(sizeof(dumb_stdfile));
+    dumb_stdfile *file = (dumb_stdfile *)dumb_malloc(sizeof(dumb_stdfile));
     if (!file)
         return 0;
     file->file = fopen(filename, "rb");
     if (!file->file) {
-        free(file);
+        dumb_free(file);
         return 0;
     }
     fseek(file->file, 0, SEEK_END);
     file->size = ftell(file->file);
     if (file->size < 0) {
         fclose(file->file);
-        free(file);
+        dumb_free(file);
         return 0;
     }
     fseek(file->file, 0, SEEK_SET);
@@ -64,10 +64,10 @@ static dumb_ssize_t dumb_stdfile_getnc(char *ptr, size_t n, void *f) {
 static void dumb_stdfile_close(void *f) {
     dumb_stdfile *file = (dumb_stdfile *)f;
     fclose(file->file);
-    free(f);
+    dumb_free(f);
 }
 
-static void dumb_stdfile_noclose(void *f) { free(f); }
+static void dumb_stdfile_noclose(void *f) { dumb_free(f); }
 
 static int dumb_stdfile_seek(void *f, dumb_off_t n) {
     dumb_stdfile *file = (dumb_stdfile *)f;
@@ -95,7 +95,7 @@ static const DUMBFILE_SYSTEM stdfile_dfs_leave_open = {NULL,
                                                        &dumb_stdfile_get_size};
 
 DUMBFILE *dumbfile_open_stdfile(FILE *p) {
-    dumb_stdfile *file = (dumb_stdfile *)malloc(sizeof(dumb_stdfile));
+    dumb_stdfile *file = (dumb_stdfile *)dumb_malloc(sizeof(dumb_stdfile));
     DUMBFILE *d;
     if (!file)
         return 0;
@@ -103,7 +103,7 @@ DUMBFILE *dumbfile_open_stdfile(FILE *p) {
     fseek(p, 0, SEEK_END);
     file->size = ftell(p);
     if (file->size < 0) {
-        free(file);
+        dumb_free(file);
         return 0;
     }
     fseek(p, 0, SEEK_SET);

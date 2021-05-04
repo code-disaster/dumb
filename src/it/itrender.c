@@ -42,18 +42,18 @@
 // #define BIT_ARRAY_BULLSHIT
 
 static IT_PLAYING *new_playing() {
-    IT_PLAYING *r = (IT_PLAYING *)malloc(sizeof(*r));
+    IT_PLAYING *r = (IT_PLAYING *)dumb_malloc(sizeof(*r));
     if (r) {
         r->resampler.fir_resampler_ratio = 0.0;
         r->resampler.fir_resampler[0] = resampler_create();
         if (!r->resampler.fir_resampler[0]) {
-            free(r);
+            dumb_free(r);
             return NULL;
         }
         r->resampler.fir_resampler[1] = resampler_create();
         if (!r->resampler.fir_resampler[1]) {
             resampler_delete(r->resampler.fir_resampler[0]);
-            free(r);
+            dumb_free(r);
             return NULL;
         }
     }
@@ -63,7 +63,7 @@ static IT_PLAYING *new_playing() {
 static void free_playing(IT_PLAYING *r) {
     resampler_delete(r->resampler.fir_resampler[1]);
     resampler_delete(r->resampler.fir_resampler[0]);
-    free(r);
+    dumb_free(r);
 }
 
 static IT_PLAYING *dup_playing(IT_PLAYING *src, IT_CHANNEL *dstchannel,
@@ -73,7 +73,7 @@ static IT_PLAYING *dup_playing(IT_PLAYING *src, IT_CHANNEL *dstchannel,
     if (!src)
         return NULL;
 
-    dst = malloc(sizeof(*dst));
+    dst = dumb_malloc(sizeof(*dst));
     if (!dst)
         return NULL;
 
@@ -158,14 +158,14 @@ static IT_PLAYING *dup_playing(IT_PLAYING *src, IT_CHANNEL *dstchannel,
     dst->resampler.fir_resampler[0] =
         resampler_dup(src->resampler.fir_resampler[0]);
     if (!dst->resampler.fir_resampler[0]) {
-        free(dst);
+        dumb_free(dst);
         return NULL;
     }
     dst->resampler.fir_resampler[1] =
         resampler_dup(src->resampler.fir_resampler[1]);
     if (!dst->resampler.fir_resampler[1]) {
         resampler_delete(dst->resampler.fir_resampler[0]);
-        free(dst);
+        dumb_free(dst);
         return NULL;
     }
     dst->time_lost = src->time_lost;
@@ -289,14 +289,14 @@ static DUMB_IT_SIGRENDERER *dup_sigrenderer(DUMB_IT_SIGRENDERER *src,
 
     if (!src) {
         if (callbacks)
-            free(callbacks);
+            dumb_free(callbacks);
         return NULL;
     }
 
-    dst = malloc(sizeof(*dst));
+    dst = dumb_malloc(sizeof(*dst));
     if (!dst) {
         if (callbacks)
-            free(callbacks);
+            dumb_free(callbacks);
         return NULL;
     }
 
@@ -4405,7 +4405,7 @@ static const unsigned short ProTrackerPeriodTable[6*12] =
 };
 
 
-static const unsigned short ProTrackerTunedPeriods[16*12] = 
+static const unsigned short ProTrackerTunedPeriods[16*12] =
 {
 	1712,1616,1524,1440,1356,1280,1208,1140,1076,1016,960,907,
 	1700,1604,1514,1430,1348,1274,1202,1134,1070,1010,954,900,
@@ -4422,7 +4422,7 @@ static const unsigned short ProTrackerTunedPeriods[16*12] =
 	1762,1664,1570,1482,1398,1320,1246,1176,1110,1048,988,934,
 	1750,1652,1558,1472,1388,1310,1238,1168,1102,1040,982,926,
 	1736,1640,1548,1460,1378,1302,1228,1160,1094,1032,974,920,
-	1724,1628,1536,1450,1368,1292,1220,1150,1086,1026,968,914 
+	1724,1628,1536,1450,1368,1292,1220,1150,1086,1026,968,914
 };
 #endif
 
@@ -5696,14 +5696,14 @@ static DUMB_IT_SIGRENDERER *init_sigrenderer(DUMB_IT_SIGDATA *sigdata,
     int i;
 
     if (startorder > sigdata->n_orders) {
-        free(callbacks);
+        dumb_free(callbacks);
         dumb_destroy_click_remover_array(n_channels, cr);
         return NULL;
     }
 
-    sigrenderer = malloc(sizeof(*sigrenderer));
+    sigrenderer = dumb_malloc(sizeof(*sigrenderer));
     if (!sigrenderer) {
-        free(callbacks);
+        dumb_free(callbacks);
         dumb_destroy_click_remover_array(n_channels, cr);
         return NULL;
     }
@@ -5957,7 +5957,7 @@ void dumb_it_set_global_volume_zero_callback(DUMB_IT_SIGRENDERER *sigrenderer,
 }
 
 static IT_CALLBACKS *create_callbacks(void) {
-    IT_CALLBACKS *callbacks = malloc(sizeof(*callbacks));
+    IT_CALLBACKS *callbacks = dumb_malloc(sizeof(*callbacks));
     if (!callbacks)
         return NULL;
     callbacks->loop = NULL;
@@ -6173,7 +6173,7 @@ void _dumb_it_end_sigrenderer(sigrenderer_t *vsigrenderer) {
                                          sigrenderer->click_remover);
 
         if (sigrenderer->callbacks)
-            free(sigrenderer->callbacks);
+            dumb_free(sigrenderer->callbacks);
 
 #ifdef BIT_ARRAY_BULLSHIT
         bit_array_destroy(sigrenderer->played);
@@ -6181,7 +6181,7 @@ void _dumb_it_end_sigrenderer(sigrenderer_t *vsigrenderer) {
         timekeeping_array_destroy(sigrenderer->row_timekeeper);
 #endif
 
-        free(vsigrenderer);
+        dumb_free(vsigrenderer);
     }
 }
 
@@ -6296,17 +6296,17 @@ long dumb_it_build_checkpoints(DUMB_IT_SIGDATA *sigdata, int startorder) {
     while (checkpoint) {
         IT_CHECKPOINT *next = checkpoint->next;
         _dumb_it_end_sigrenderer(checkpoint->sigrenderer);
-        free(checkpoint);
+        dumb_free(checkpoint);
         checkpoint = next;
     }
     sigdata->checkpoint = NULL;
-    checkpoint = malloc(sizeof(*checkpoint));
+    checkpoint = dumb_malloc(sizeof(*checkpoint));
     if (!checkpoint)
         return 0;
     checkpoint->time = 0;
     checkpoint->sigrenderer = dumb_it_init_sigrenderer(sigdata, 0, startorder);
     if (!checkpoint->sigrenderer) {
-        free(checkpoint);
+        dumb_free(checkpoint);
         return 0;
     }
     checkpoint->sigrenderer->callbacks->loop = &dumb_it_callback_terminate;
@@ -6320,7 +6320,7 @@ long dumb_it_build_checkpoints(DUMB_IT_SIGDATA *sigdata, int startorder) {
         while (checkpoint) {
             IT_CHECKPOINT *next = checkpoint->next;
             _dumb_it_end_sigrenderer(checkpoint->sigrenderer);
-            free(checkpoint);
+            dumb_free(checkpoint);
             checkpoint = next;
         }
     }
@@ -6345,7 +6345,7 @@ long dumb_it_build_checkpoints(DUMB_IT_SIGDATA *sigdata, int startorder) {
             return checkpoint->time + l;
         }
 
-        checkpoint->next = malloc(sizeof(*checkpoint->next));
+        checkpoint->next = dumb_malloc(sizeof(*checkpoint->next));
         if (!checkpoint->next) {
             _dumb_it_end_sigrenderer(sigrenderer);
             return checkpoint->time + IT_CHECKPOINT_INTERVAL;
@@ -6489,7 +6489,7 @@ int dumb_it_trim_silent_patterns(DUH *duh) {
                 pattern->n_rows = 1;
                 pattern->n_entries = 0;
                 if (pattern->entry) {
-                    free(pattern->entry);
+                    dumb_free(pattern->entry);
                     pattern->entry = NULL;
                 }
             } else
@@ -6508,7 +6508,7 @@ int dumb_it_trim_silent_patterns(DUH *duh) {
                 pattern->n_rows = 1;
                 pattern->n_entries = 0;
                 if (pattern->entry) {
-                    free(pattern->entry);
+                    dumb_free(pattern->entry);
                     pattern->entry = NULL;
                 }
             } else

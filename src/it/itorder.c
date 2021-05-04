@@ -49,7 +49,7 @@ int _dumb_it_fix_invalid_orders(DUMB_IT_SIGDATA *sigdata) {
 
     if (found_some) {
         IT_PATTERN *new_pattern =
-            realloc(sigdata->pattern,
+            dumb_realloc(sigdata->pattern,
                     sizeof(*sigdata->pattern) * (sigdata->n_patterns + 1));
         if (!new_pattern)
             return -1;

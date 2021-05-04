@@ -52,7 +52,7 @@ static int it_669_read_pattern(IT_PATTERN *pattern, DUMBFILE *f, int tempo,
         }
     }
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
     if (!pattern->entry)
         return -1;
 
@@ -217,7 +217,7 @@ static int it_669_read_sample_data(IT_SAMPLE *sample, DUMBFILE *f) {
         truncated_size = 0;
     }
 
-    sample->data = malloc(sample->length);
+    sample->data = dumb_malloc(sample->length);
 
     if (!sample->data)
         return -1;
@@ -263,13 +263,13 @@ static DUMB_IT_SIGDATA *it_669_load_sigdata(DUMBFILE *f, int *ext) {
 
     *ext = (i == 0x4E4A);
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata) {
         return NULL;
     }
 
     if (dumbfile_getnc((char *)sigdata->name, 36, f) < 36) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
     sigdata->name[36] = 0;
@@ -283,9 +283,9 @@ static DUMB_IT_SIGDATA *it_669_load_sigdata(DUMBFILE *f, int *ext) {
 
     sigdata->n_instruments = 0;
 
-    sigdata->song_message = malloc(72 + 2 + 1);
+    sigdata->song_message = dumb_malloc(72 + 2 + 1);
     if (!sigdata->song_message) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
     if (dumbfile_getnc((char *)sigdata->song_message, 36, f) < 36) {
@@ -309,7 +309,7 @@ static DUMB_IT_SIGDATA *it_669_load_sigdata(DUMBFILE *f, int *ext) {
         return NULL;
     }
 
-    sigdata->order = malloc(128); /* We may need to scan the extra ones! */
+    sigdata->order = dumb_malloc(128); /* We may need to scan the extra ones! */
     if (!sigdata->order) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -343,7 +343,7 @@ static DUMB_IT_SIGDATA *it_669_load_sigdata(DUMBFILE *f, int *ext) {
         return NULL;
     }
 
-    sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+    sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
     if (!sigdata->sample) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -361,12 +361,12 @@ static DUMB_IT_SIGDATA *it_669_load_sigdata(DUMBFILE *f, int *ext) {
 
     /* May as well try to save a tiny bit of memory. */
     if (sigdata->n_orders < 128) {
-        unsigned char *order = realloc(sigdata->order, sigdata->n_orders);
+        unsigned char *order = dumb_realloc(sigdata->order, sigdata->n_orders);
         if (order)
             sigdata->order = order;
     }
 
-    sigdata->pattern = malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+    sigdata->pattern = dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
     if (!sigdata->pattern) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
@@ -379,7 +379,7 @@ static DUMB_IT_SIGDATA *it_669_load_sigdata(DUMBFILE *f, int *ext) {
     /* Read in the patterns */
     {
         unsigned char *buffer =
-            malloc(64 * 3 * 8); /* 64 rows * 3 bytes * 8 channels */
+            dumb_malloc(64 * 3 * 8); /* 64 rows * 3 bytes * 8 channels */
         if (!buffer) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -387,12 +387,12 @@ static DUMB_IT_SIGDATA *it_669_load_sigdata(DUMBFILE *f, int *ext) {
         for (i = 0; i < sigdata->n_patterns; i++) {
             if (it_669_read_pattern(&sigdata->pattern[i], f, tempolist[i],
                                     breaklist[i], buffer, &n_channels) != 0) {
-                free(buffer);
+                dumb_free(buffer);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
         }
-        free(buffer);
+        dumb_free(buffer);
     }
 
     sigdata->n_pchannels = n_channels;

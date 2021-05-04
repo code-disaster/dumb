@@ -121,7 +121,7 @@ static int it_ptm_read_sample_data(IT_SAMPLE *sample, int last, DUMBFILE *f) {
     int s;
 
     sample->data =
-        malloc(sample->length * (sample->flags & IT_SAMPLE_16BIT ? 2 : 1));
+        dumb_malloc(sample->length * (sample->flags & IT_SAMPLE_16BIT ? 2 : 1));
     if (!sample->data)
         return -1;
 
@@ -232,7 +232,7 @@ static int it_ptm_read_pattern(IT_PATTERN *pattern, DUMBFILE *f,
         }
     }
 
-    pattern->entry = malloc(pattern->n_entries * sizeof(*pattern->entry));
+    pattern->entry = dumb_malloc(pattern->n_entries * sizeof(*pattern->entry));
 
     if (!pattern->entry)
         return -1;
@@ -323,7 +323,7 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
 
     unsigned char *buffer;
 
-    sigdata = malloc(sizeof(*sigdata));
+    sigdata = dumb_malloc(sizeof(*sigdata));
     if (!sigdata)
         return NULL;
 
@@ -332,7 +332,7 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
     sigdata->name[28] = 0;
 
     if (dumbfile_getc(f) != 0x1A || dumbfile_igetw(f) != 0x203) {
-        free(sigdata);
+        dumb_free(sigdata);
         return NULL;
     }
 
@@ -374,14 +374,14 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
 
     dumbfile_skip(f, 16);
 
-    sigdata->order = malloc(sigdata->n_orders);
+    sigdata->order = dumb_malloc(sigdata->n_orders);
     if (!sigdata->order) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
 
     if (sigdata->n_samples) {
-        sigdata->sample = malloc(sigdata->n_samples * sizeof(*sigdata->sample));
+        sigdata->sample = dumb_malloc(sigdata->n_samples * sizeof(*sigdata->sample));
         if (!sigdata->sample) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -392,7 +392,7 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
 
     if (sigdata->n_patterns) {
         sigdata->pattern =
-            malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
+            dumb_malloc(sigdata->n_patterns * sizeof(*sigdata->pattern));
         if (!sigdata->pattern) {
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
@@ -431,14 +431,14 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
     dumbfile_getnc((char *)sigdata->order, sigdata->n_orders, f);
     sigdata->restart_position = 0;
 
-    component = malloc(768 * sizeof(*component));
+    component = dumb_malloc(768 * sizeof(*component));
     if (!component) {
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
 
     if (dumbfile_seek(f, 352, DFS_SEEK_SET)) {
-        free(component);
+        dumb_free(component);
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
@@ -451,7 +451,7 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
     }
 
     if (dumbfile_seek(f, 608, DFS_SEEK_SET)) {
-        free(component);
+        dumb_free(component);
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
@@ -459,7 +459,7 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
     for (n = 0; n < sigdata->n_samples; n++) {
         if (it_ptm_read_sample_header(&sigdata->sample[n],
                                       &component[n_components].offset, f)) {
-            free(component);
+            dumb_free(component);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
@@ -486,22 +486,22 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
     sigdata->pan_separation = 128;
 
     if (dumbfile_error(f)) {
-        free(component);
+        dumb_free(component);
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
 
-    buffer = malloc(65536);
+    buffer = dumb_malloc(65536);
     if (!buffer) {
-        free(component);
+        dumb_free(component);
         _dumb_it_unload_sigdata(sigdata);
         return NULL;
     }
 
     for (n = 0; n < n_components; n++) {
         if (dumbfile_seek(f, component[n].offset, DFS_SEEK_SET)) {
-            free(buffer);
-            free(component);
+            dumb_free(buffer);
+            dumb_free(component);
             _dumb_it_unload_sigdata(sigdata);
             return NULL;
         }
@@ -514,8 +514,8 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
                     (n + 1 < n_components)
                         ? (component[n + 1].offset - component[n].offset)
                         : 0)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
@@ -524,16 +524,16 @@ static DUMB_IT_SIGDATA *it_ptm_load_sigdata(DUMBFILE *f) {
         case PTM_COMPONENT_SAMPLE:
             if (it_ptm_read_sample_data(&sigdata->sample[component[n].n],
                                         (n + 1 == n_components), f)) {
-                free(buffer);
-                free(component);
+                dumb_free(buffer);
+                dumb_free(component);
                 _dumb_it_unload_sigdata(sigdata);
                 return NULL;
             }
         }
     }
 
-    free(buffer);
-    free(component);
+    dumb_free(buffer);
+    dumb_free(component);
 
     if (_dumb_it_fix_invalid_orders(sigdata) < 0) {
         _dumb_it_unload_sigdata(sigdata);

@@ -225,7 +225,7 @@ int dumb_it_add_lpc(struct DUMB_IT_SIGDATA *sigdata) {
                         lpc_order, lpc_output + lpc_extra, lpc_extra);
 
                     if (sample->flags & IT_SAMPLE_16BIT) {
-                        s16 = (signed short *)realloc(
+                        s16 = (signed short *)dumb_realloc(
                             sample->data,
                             (sample->length + lpc_extra) * 2 * sizeof(short));
                         if (!s16)
@@ -241,7 +241,7 @@ int dumb_it_add_lpc(struct DUMB_IT_SIGDATA *sigdata) {
                             s16[o * 2 + 1] = lpc_output[o + lpc_extra];
                         }
                     } else {
-                        s8 = (signed char *)realloc(
+                        s8 = (signed char *)dumb_realloc(
                             sample->data, (sample->length + lpc_extra) * 2);
                         if (!s8)
                             return -1;
@@ -278,7 +278,7 @@ int dumb_it_add_lpc(struct DUMB_IT_SIGDATA *sigdata) {
                                        lpc_order, lpc_output, lpc_extra);
 
                     if (sample->flags & IT_SAMPLE_16BIT) {
-                        s16 = (signed short *)realloc(
+                        s16 = (signed short *)dumb_realloc(
                             sample->data,
                             (sample->length + lpc_extra) * sizeof(short));
                         if (!s16)
@@ -293,7 +293,7 @@ int dumb_it_add_lpc(struct DUMB_IT_SIGDATA *sigdata) {
                             s16[o] = lpc_output[o];
                         }
                     } else {
-                        s8 = (signed char *)realloc(sample->data,
+                        s8 = (signed char *)dumb_realloc(sample->data,
                                                     sample->length + lpc_extra);
                         if (!s8)
                             return -1;
@@ -326,7 +326,7 @@ int dumb_it_add_lpc(struct DUMB_IT_SIGDATA *sigdata) {
                 offset *= n;
                 lpc_samples *= n;
 
-                data = realloc(sample->data, offset + lpc_samples);
+                data = dumb_realloc(sample->data, offset + lpc_samples);
                 if (!data)
                     return -1;
                 sample->data = data;
