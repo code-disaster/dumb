@@ -150,6 +150,23 @@ typedef SSIZE_T dumb_ssize_t;
 typedef ssize_t dumb_ssize_t;
 #endif
 
+typedef struct DUMBMEMORY_SYSTEM {
+    void *(*malloc)(size_t size);
+    void *(*calloc)(size_t num, size_t size);
+    void *(*realloc)(void *ptr, size_t size);
+    void (*free)(void *ptr);
+} DUMBMEMORY_SYSTEM;
+
+void register_dumbmemory_system(const DUMBMEMORY_SYSTEM *dms);
+
+void *dumb_malloc(size_t size);
+
+void *dumb_calloc(size_t num, size_t size);
+
+void *dumb_realloc(void *ptr, size_t size);
+
+void dumb_free(void *ptr);
+
 /*
  * DUMB provides an abstraction over files, to work with memory-mapped files,
  * files on disk, files read into memory by other libraries in their own
